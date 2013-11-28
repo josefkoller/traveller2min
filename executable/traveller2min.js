@@ -123,6 +123,7 @@
       this.parameter.number_of_iterations = parameter.number_of_iterations || 10;
       this.parameter.mutation_factor1 = parameter.mutation_factor1 || 0.7;
       this.parameter.mutation_factor2 = parameter.mutation_factor2 || 0.9;
+      this.parameter.cross_over_ratio = parameter.cross_over_ratio || 0.8;
     }
 
     differential_evolution.prototype.run = function() {
@@ -174,23 +175,24 @@
     };
 
     differential_evolution.prototype.recombination = function() {
-      return this.particles.for_each(function(particle) {
-        if (Math.random() < this.cross_over_factor) {
-          return particle.cross_over = true;
-        }
+      return this.particles.for_each(function(particle, particles) {
+        return particle.cross_over = Math.random() < particles.parameter.cross_over_ratio;
       });
     };
 
     differential_evolution.prototype.selection = function() {
-      return this.particles.for_each(function(particle) {
-        return particle.fight();
+      return this.particles.for_each(function(particle, particles) {
+        if (particle.fight()) {
+          return particles.parameter.on_particle_creation(particle);
+        }
       });
     };
 
     differential_evolution.prototype.termination = function() {
-      var best;
+      var best, text;
       best = this.particles.current_best_particle;
-      return alert("Best particle at termination: " + best.to_string());
+      text = "Best particle at termination: " + best.to_string();
+      return $("#termination_display").html(text);
     };
 
     return differential_evolution;
@@ -204,20 +206,31 @@
   Particle.prototype.fight = function() {
     if (this.cross_over && this.child.dominates(this)) {
       this.parameter_value = this.child.parameter_value;
-      return this.objective_value = this.child.objective_value;
+      this.objective_value = this.child.objective_value;
+      return true;
     }
+    return false;
   };
 
   Particle.prototype.to_string = function() {
-    return "parameter value: " + this.parameter_value + ", objective value: " + this.objective_value;
+    var dimension_value, parameter_value, _i, _len, _ref;
+    parameter_value = "(";
+    _ref = this.parameter_value;
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      dimension_value = _ref[_i];
+      parameter_value += dimension_value + ", ";
+    }
+    parameter_value += ")";
+    return "parameter value: " + parameter_value + ", objective value: " + this.objective_value;
   };
 
   (function() {
     return (function() {
-      var addLine, addVectors, add_axis, add_particle_line, axis_length, drawF1, lines, run_evolution, scene, traveller_main, vector_on_axis, z_scaling;
+      var addLine, addVectors, add_axis, add_particle_line, axis_length, clear_lines, drawF1, lines, run_evolution, scene, traveller_main, vector_on_axis, z_scaling;
       addLine = void 0;
       addVectors = void 0;
       add_axis = void 0;
+      clear_lines = void 0;
       axis_length = void 0;
       drawF1 = void 0;
       lines = void 0;
@@ -416,7 +429,7 @@
         return options.color;
       };
       drawF1 = function(scene) {
-        var color1, color2, h, i, point1, point2, s, x, y, z, _results;
+        var color1, color2, h, i, min, point1, point2, s, x, y, z, _results;
         color1 = void 0;
         color2 = void 0;
         h = void 0;
@@ -428,11 +441,7 @@
         y = void 0;
         z = void 0;
         _results = void 0;
-        i = 0;
-        while (i < lines.length) {
-          scene.removeObjectFromScene(lines[i]);
-          i = i + 1;
-        }
+        clear_lines(scene);
         lines = [];
         add_axis(scene, "x", axis_length);
         add_axis(scene, "y", axis_length * z_scaling);
@@ -443,17 +452,34 @@
         s = 0.5;
         y = -h;
         _results = [];
+        min = {};
+        min.z = void 0;
         while (y <= h) {
           x = -h;
           while (x <= h) {
             z = square(1.5 - x + x * y) + square(2.25 - x + x * y * y) + square(2.625 - x + x * y * y * y);
             z = z / 100000 * z_scaling;
+            if (min.z === void 0 || z < min.z) {
+              min.x = x;
+              min.y = y;
+              min.z = z;
+            }
             point1 = [x, 0, y];
             point2 = [x, z, y];
             addLine(scene, point1, point2, color1, color2);
             x = x + s;
           }
           _results.push(y = y + s);
+        }
+        $("#termination_display").html("min: " + min.x + "|" + min.z + "|" + min.y);
+        return _results;
+      };
+      clear_lines = function(scene) {
+        var line, _i, _len, _results;
+        _results = [];
+        for (_i = 0, _len = lines.length; _i < _len; _i++) {
+          line = lines[_i];
+          _results.push(scene.removeObjectFromScene(line));
         }
         return _results;
       };
@@ -489,9 +515,13 @@
       };
       run_evolution = function(scene) {
         var algorithm, parameter;
+        clear_lines(scene);
         parameter = {};
         parameter.scene = scene;
         parameter.on_particle_creation = function(particle) {
+          return add_particle_line(parameter.scene, particle);
+        };
+        parameter.on_best_particle_changes = function(particle) {
           return add_particle_line(parameter.scene, particle);
         };
         parameter.objective = function(X) {
@@ -510,6 +540,8 @@
           }
         ];
         parameter.number_of_dimensions = 2;
+        parameter.number_of_particles = 64;
+        parameter.number_of_iterations = 64;
         algorithm = new differential_evolution(parameter);
         return algorithm.run();
       };

@@ -76,6 +76,7 @@ class differential_evolution
     @parameter.number_of_iterations = parameter.number_of_iterations or 10
     @parameter.mutation_factor1 = parameter.mutation_factor1 or 0.7
     @parameter.mutation_factor2 = parameter.mutation_factor2 or 0.9
+    @parameter.cross_over_ratio = parameter.cross_over_ratio or 0.8
   run: =>
     @initialize()
     while @start_iteration()
@@ -115,18 +116,19 @@ class differential_evolution
 
 
   recombination: =>
-    @particles.for_each (particle) ->
-      particle.cross_over = true  if Math.random() < @cross_over_factor
+    @particles.for_each (particle, particles) ->
+      particle.cross_over = Math.random() < particles.parameter.cross_over_ratio
 
 
   selection: => 
-    @particles.for_each (particle) ->
-      particle.fight()
+    @particles.for_each (particle, particles) ->
+      (particles.parameter.on_particle_creation(particle) if particle.fight())
 
 
   termination: =>
     best = @particles.current_best_particle
-    alert "Best particle at termination: " + best.to_string()
+    text = "Best particle at termination: " + best.to_string()
+    $("#termination_display").html text
 
 Particle::dominates = (other) ->
   @objective_value < other.objective_value
@@ -135,9 +137,15 @@ Particle::fight = ->
   if @cross_over and @child.dominates(this)
     @parameter_value = @child.parameter_value
     @objective_value = @child.objective_value
+    return true
+  false
 
 Particle::to_string = ->
-  "parameter value: " + @parameter_value + ", objective value: " + @objective_value
+  parameter_value = "("
+  for dimension_value in @parameter_value
+     parameter_value += dimension_value + ", "
+  parameter_value += ")" 
+  "parameter value: " + parameter_value + ", objective value: " + @objective_value
 
 
 
@@ -158,6 +166,7 @@ Particle::to_string = ->
     addLine = undefined
     addVectors = undefined
     add_axis = undefined
+    clear_lines = undefined
     axis_length = undefined
     drawF1 = undefined
     lines = undefined
@@ -341,10 +350,7 @@ Particle::to_string = ->
       y = undefined
       z = undefined
       _results = undefined
-      i = 0
-      while i < lines.length
-        scene.removeObjectFromScene lines[i]
-        i = i + 1
+      clear_lines scene
       lines = []
       add_axis scene, "x", axis_length
       add_axis scene, "y", axis_length * z_scaling
@@ -355,17 +361,28 @@ Particle::to_string = ->
       s = 0.5
       y = -h
       _results = []
+      min = {}
+      min.z = undefined
       while y <= h
         x = -h
         while x <= h
           z = square(1.5 - x + x * y) + square(2.25 - x + x * y * y) + square(2.625 - x + x * y * y * y)
           z = z / 100000 * z_scaling
+          if min.z == undefined or z < min.z
+            min.x = x
+            min.y = y
+            min.z = z
           point1 = [x, 0, y]
           point2 = [x, z, y]
           addLine scene, point1, point2, color1, color2
           x = x + s
         _results.push y = y + s
+      $("#termination_display").html "min: #{min.x}|#{min.z}|#{min.y}"
       _results
+
+    clear_lines = (scene) ->
+      for line in lines
+        scene.removeObjectFromScene line
 
     addLine = (scene, point1, point2, color, color2) ->
       line = undefined
@@ -388,24 +405,27 @@ Particle::to_string = ->
       x = particle.parameter_value[0]
       y = particle.parameter_value[1] or 0
       z = particle.objective_value 
-      z = z / 100000 * z_scaling
+      z = (z / 100000 * z_scaling)
       point1 = [x,0,y]
       point2 = [x,z,y]
       addLine scene, point1, point2, color1, color2
 
     run_evolution = (scene) ->
+      clear_lines scene
       parameter = {}
       parameter.scene = scene
       parameter.on_particle_creation = (particle) ->
         add_particle_line(parameter.scene, particle)
-
+      parameter.on_best_particle_changes = (particle) ->
+        add_particle_line(parameter.scene, particle)
       parameter.objective = (X) ->
         x = X[0]
         y = X[1]
         square(1.5 - x + x * y) + square(2.25 - x + x * y * y) + square(2.625 - x + x * y * y * y)
-
       parameter.search_space = [(min: -4.5, max: 4.5),(min: -4.5, max: 4.5)]
       parameter.number_of_dimensions = 2
+      parameter.number_of_particles = 64
+      parameter.number_of_iterations = 64
       algorithm =new differential_evolution(parameter)
       algorithm.run()
 

@@ -12,7 +12,6 @@ class ParticleStorage
     @particles = new Array()
     @current_best_particle = null
     i = 0
-
     while i < @parameter.number_of_particles
       @add_random_particle()
       i++
@@ -25,6 +24,7 @@ class ParticleStorage
     particle = new Particle(parameter_value, objective_value)
     @check_best_particle particle
     @particles.push particle
+    @parameter.on_particle_creation particle
 
   add_random_particle: ->
     parameter_value = new Array()
@@ -68,8 +68,7 @@ objective2 = (X) ->
 
 class differential_evolution
   constructor: (parameter) ->
-    parameter = parameter or {}
-    @parameter = {}
+    @parameter = parameter or {}
     @parameter.objective = parameter.objective or objective1
     @parameter.search_space = parameter.search_space or [(min: -1, max: 1)]
     @parameter.number_of_dimensions = parameter.number_of_dimensions or 1
@@ -325,7 +324,7 @@ Particle::to_string = ->
           $("#traveller_display").html text
 
       scene.startScene()
-      drawF1 scene
+      # drawF1 scene
       generation = []
       options = {}
       options.color
@@ -383,8 +382,31 @@ Particle::to_string = ->
     square = (x) ->
       x * x
 
+    add_particle_line = (scene, particle) ->
+      color1 = [0.8, 0.9, 0]
+      color2 = [0, 0.2, 0.8]
+      x = particle.parameter_value[0]
+      y = particle.parameter_value[1] or 0
+      z = particle.objective_value 
+      z = z / 100000 * z_scaling
+      point1 = [x,0,y]
+      point2 = [x,z,y]
+      addLine scene, point1, point2, color1, color2
+
     run_evolution = (scene) ->
-      algorithm =new differential_evolution()
+      parameter = {}
+      parameter.scene = scene
+      parameter.on_particle_creation = (particle) ->
+        add_particle_line(parameter.scene, particle)
+
+      parameter.objective = (X) ->
+        x = X[0]
+        y = X[1]
+        square(1.5 - x + x * y) + square(2.25 - x + x * y * y) + square(2.625 - x + x * y * y * y)
+
+      parameter.search_space = [(min: -4.5, max: 4.5),(min: -4.5, max: 4.5)]
+      parameter.number_of_dimensions = 2
+      algorithm =new differential_evolution(parameter)
       algorithm.run()
 
     c3dl.addMainCallBack traveller_main, "traveller_canvas"

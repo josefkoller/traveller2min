@@ -41,7 +41,8 @@
       var particle;
       particle = new Particle(parameter_value, objective_value);
       this.check_best_particle(particle);
-      return this.particles.push(particle);
+      this.particles.push(particle);
+      return this.parameter.on_particle_creation(particle);
     };
 
     ParticleStorage.prototype.add_random_particle = function() {
@@ -109,8 +110,7 @@
       this.recombination = __bind(this.recombination, this);
       this.initialize = __bind(this.initialize, this);
       this.run = __bind(this.run, this);
-      parameter = parameter || {};
-      this.parameter = {};
+      this.parameter = parameter || {};
       this.parameter.objective = parameter.objective || objective1;
       this.parameter.search_space = parameter.search_space || [
         {
@@ -214,7 +214,7 @@
 
   (function() {
     return (function() {
-      var addLine, addVectors, add_axis, axis_length, drawF1, lines, run_evolution, scene, traveller_main, vector_on_axis, z_scaling;
+      var addLine, addVectors, add_axis, add_particle_line, axis_length, drawF1, lines, run_evolution, scene, traveller_main, vector_on_axis, z_scaling;
       addLine = void 0;
       addVectors = void 0;
       add_axis = void 0;
@@ -411,7 +411,6 @@
           }
         };
         scene.startScene();
-        drawF1(scene);
         generation = [];
         options = {};
         return options.color;
@@ -476,9 +475,42 @@
       square = function(x) {
         return x * x;
       };
+      add_particle_line = function(scene, particle) {
+        var color1, color2, point1, point2, x, y, z;
+        color1 = [0.8, 0.9, 0];
+        color2 = [0, 0.2, 0.8];
+        x = particle.parameter_value[0];
+        y = particle.parameter_value[1] || 0;
+        z = particle.objective_value;
+        z = z / 100000 * z_scaling;
+        point1 = [x, 0, y];
+        point2 = [x, z, y];
+        return addLine(scene, point1, point2, color1, color2);
+      };
       run_evolution = function(scene) {
-        var algorithm;
-        algorithm = new differential_evolution();
+        var algorithm, parameter;
+        parameter = {};
+        parameter.scene = scene;
+        parameter.on_particle_creation = function(particle) {
+          return add_particle_line(parameter.scene, particle);
+        };
+        parameter.objective = function(X) {
+          var x, y;
+          x = X[0];
+          y = X[1];
+          return square(1.5 - x + x * y) + square(2.25 - x + x * y * y) + square(2.625 - x + x * y * y * y);
+        };
+        parameter.search_space = [
+          {
+            min: -4.5,
+            max: 4.5
+          }, {
+            min: -4.5,
+            max: 4.5
+          }
+        ];
+        parameter.number_of_dimensions = 2;
+        algorithm = new differential_evolution(parameter);
         return algorithm.run();
       };
       return c3dl.addMainCallBack(traveller_main, "traveller_canvas");

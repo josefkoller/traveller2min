@@ -34,15 +34,16 @@
       if ((this.current_best_particle != null) && this.current_best_particle.objective_value < new_particle.objective_value) {
         return;
       }
+      this.parameter.on_best_particle_changes(new_particle);
       return this.current_best_particle = new_particle;
     };
 
     ParticleStorage.prototype.add = function(parameter_value, objective_value) {
       var particle;
       particle = new Particle(parameter_value, objective_value);
-      this.check_best_particle(particle);
       this.particles.push(particle);
-      return this.parameter.on_particle_creation(particle);
+      this.parameter.on_particle_creation(particle);
+      return this.check_best_particle(particle);
     };
 
     ParticleStorage.prototype.check_parameter_value_in_search_space = function(parameter_value) {
@@ -203,7 +204,10 @@
 
     differential_evolution.prototype.selection = function() {
       return this.particles.for_each(function(particle, particles) {
-        if (particle.fight()) {
+        if (particle.cross_over && particle.child.dominates(particle)) {
+          particles.parameter.on_particle_death(particle);
+          particle.parameter_value = particle.child.parameter_value;
+          particle.objective_value = particle.child.objective_value;
           return particles.parameter.on_particle_creation(particle);
         }
       });
@@ -224,15 +228,6 @@
     return this.objective_value < other.objective_value;
   };
 
-  Particle.prototype.fight = function() {
-    if (this.cross_over && this.child.dominates(this)) {
-      this.parameter_value = this.child.parameter_value;
-      this.objective_value = this.child.objective_value;
-      return true;
-    }
-    return false;
-  };
-
   Particle.prototype.to_string = function() {
     var dimension_value, parameter_value, _i, _len, _ref;
     parameter_value = "(";
@@ -247,11 +242,13 @@
 
   (function() {
     return (function() {
-      var addLine, addVectors, add_axis, add_particle_line, axis_length, clear_lines, drawF1, lines, run_evolution, scale_lines, scene, traveller_main, vector_on_axis, z_scaling;
+      var addLine, addVectors, add_axis, add_particle_line, axis_length, best_color1, best_color2, best_marker, best_particle, best_particle_changes, best_width, clear_lines, death_color1, death_color2, death_width, drawF1, generation_color1, generation_color2, generation_width, kill_particle_line, lines, run_evolution, scale_line, scale_lines, scene, traveller_main, vector_on_axis, z_scaling;
       addLine = void 0;
       addVectors = void 0;
       add_axis = void 0;
       clear_lines = void 0;
+      best_particle = void 0;
+      best_marker = void 0;
       scale_lines = void 0;
       axis_length = void 0;
       drawF1 = void 0;
@@ -508,20 +505,24 @@
         return _results;
       };
       scale_lines = function(factor) {
-        var coordinates, line, point1, point2, z, _i, _len, _results;
+        var line, _i, _len, _results;
         _results = [];
         for (_i = 0, _len = lines.length; _i < _len; _i++) {
           line = lines[_i];
-          coordinates = line.getCoordinates();
-          z = coordinates[4];
-          z *= factor;
-          point1 = [coordinates[0], coordinates[1], coordinates[2]];
-          point2 = [coordinates[3], z, coordinates[5]];
-          _results.push(line.setCoordinates(point1, point2));
+          _results.push(scale_line(line, factor));
         }
         return _results;
       };
-      addLine = function(scene, point1, point2, color, color2) {
+      scale_line = function(line, factor) {
+        var coordinates, point1, point2, z;
+        coordinates = line.getCoordinates();
+        z = coordinates[4];
+        z *= factor;
+        point1 = [coordinates[0], coordinates[1], coordinates[2]];
+        point2 = [coordinates[3], z, coordinates[5]];
+        return line.setCoordinates(point1, point2);
+      };
+      addLine = function(scene, point1, point2, color, color2, width) {
         var line;
         line = void 0;
         line = void 0;
@@ -531,7 +532,7 @@
         line = new c3dl.Line();
         line.setCoordinates(point1, point2);
         line.setColors(color, color2);
-        line.setWidth(4);
+        line.setWidth(width || 1);
         lines.push(line);
         scene.addObjectToScene(line);
         return line;
@@ -539,28 +540,62 @@
       square = function(x) {
         return x * x;
       };
+      generation_color1 = [0.8, 0.9, 0];
+      generation_color2 = [0, 0.2, 0.8];
+      generation_width = 2;
+      death_color1 = [0.2, 0.3, 0];
+      death_color2 = [0, 0.6, 0.3];
+      death_width = 1;
+      best_color1 = [0.9, 0.1, 0.0];
+      best_color2 = [0.9, 0.1, 0.0];
+      best_width = 6;
       add_particle_line = function(scene, particle) {
-        var color1, color2, point1, point2, x, y, z;
-        color1 = [0.8, 0.9, 0];
-        color2 = [0, 0.2, 0.8];
+        var line, point1, point2, x, y, z;
         x = particle.parameter_value[0];
         y = particle.parameter_value[1] || 0;
         z = particle.objective_value;
-        z = z / 100000 * z_scaling;
+        z = 4 - (z / 100000 * z_scaling);
         point1 = [x, 0, y];
         point2 = [x, z, y];
-        return addLine(scene, point1, point2, color1, color2);
+        line = addLine(scene, point1, point2, generation_color1, generation_color2, generation_width);
+        return particle.line = line;
+      };
+      kill_particle_line = function(scene, particle) {
+        particle.line.setColors(death_color1, death_color2);
+        particle.line.setWidth(death_width);
+        scale_line(particle.line, 0.5);
+        scene.removeObjectFromScene(particle.line);
+        return particle.line = null;
+      };
+      best_particle_changes = function(scene, particle) {
+        var coordinates, point1, point2;
+        if (!particle.line) {
+          return;
+        }
+        best_particle = particle;
+        coordinates = best_particle.line.getCoordinates();
+        point1 = [coordinates[0], 0, coordinates[2]];
+        point2 = [coordinates[0], -3, coordinates[2]];
+        if (best_marker === void 0) {
+          return best_marker = addLine(scene, point1, point2, best_color1, best_color2, best_width);
+        } else {
+          return best_marker.setCoordinates(point1, point2);
+        }
       };
       run_evolution = function(scene) {
         var algorithm, parameter;
         clear_lines(scene);
+        best_marker = void 0;
         parameter = {};
         parameter.scene = scene;
         parameter.on_particle_creation = function(particle) {
           return add_particle_line(parameter.scene, particle);
         };
         parameter.on_best_particle_changes = function(particle) {
-          return add_particle_line(parameter.scene, particle);
+          return best_particle_changes(parameter.scene, particle);
+        };
+        parameter.on_particle_death = function(particle) {
+          return kill_particle_line(parameter.scene, particle);
         };
         parameter.objective = function(X) {
           var x, y;
@@ -579,7 +614,7 @@
         ];
         parameter.number_of_dimensions = 2;
         parameter.number_of_particles = 64;
-        parameter.number_of_iterations = 64;
+        parameter.number_of_iterations = 200;
         algorithm = new differential_evolution(parameter);
         return algorithm.run();
       };

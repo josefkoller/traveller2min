@@ -18,13 +18,14 @@ class ParticleStorage
 
   check_best_particle: (new_particle) ->
     return  if @current_best_particle? and @current_best_particle.objective_value < new_particle.objective_value
+    @parameter.on_best_particle_changes(new_particle) 
     @current_best_particle = new_particle
 
   add: (parameter_value, objective_value) ->
     particle = new Particle(parameter_value, objective_value)
-    @check_best_particle particle
     @particles.push particle
     @parameter.on_particle_creation particle
+    @check_best_particle particle
 
   check_parameter_value_in_search_space: (parameter_value) ->
     i = 0
@@ -133,11 +134,13 @@ class differential_evolution
     @particles.for_each (particle, particles) ->
       particle.cross_over = Math.random() < particles.parameter.cross_over_ratio
 
-
   selection: => 
     @particles.for_each (particle, particles) ->
-      (particles.parameter.on_particle_creation(particle) if particle.fight())
-
+      if particle.cross_over and particle.child.dominates(particle)
+        particles.parameter.on_particle_death(particle)
+        particle.parameter_value = particle.child.parameter_value
+        particle.objective_value = particle.child.objective_value
+        particles.parameter.on_particle_creation(particle)
 
   termination: =>
     best = @particles.current_best_particle
@@ -147,12 +150,6 @@ class differential_evolution
 Particle::dominates = (other) ->
   @objective_value < other.objective_value
 
-Particle::fight = ->
-  if @cross_over and @child.dominates(this)
-    @parameter_value = @child.parameter_value
-    @objective_value = @child.objective_value
-    return true
-  false
 
 Particle::to_string = ->
   parameter_value = "("
@@ -181,6 +178,8 @@ Particle::to_string = ->
     addVectors = undefined
     add_axis = undefined
     clear_lines = undefined
+    best_particle = undefined
+    best_marker = undefined
     scale_lines = undefined
     axis_length = undefined
     drawF1 = undefined
@@ -403,21 +402,24 @@ Particle::to_string = ->
 
     scale_lines = (factor) ->
       for line in lines
-        coordinates = line.getCoordinates()
-        z = coordinates[4]	
-        z *= factor
-        point1 = [coordinates[0], coordinates[1], coordinates[2]]
-        point2 = [coordinates[3], z, coordinates[5]]
-        line.setCoordinates(point1, point2)
+        scale_line line, factor
 
-    addLine = (scene, point1, point2, color, color2) ->
+    scale_line = (line, factor) ->
+      coordinates = line.getCoordinates()
+      z = coordinates[4]	
+      z *= factor
+      point1 = [coordinates[0], coordinates[1], coordinates[2]]
+      point2 = [coordinates[3], z, coordinates[5]]
+      line.setCoordinates(point1, point2)
+
+    addLine = (scene, point1, point2, color, color2, width) ->
       line = undefined
       line = undefined
       color2 = color  unless color2
       line = new c3dl.Line()
       line.setCoordinates point1, point2
       line.setColors color, color2
-      line.setWidth 4
+      line.setWidth (width or 1) 
       lines.push line
       scene.addObjectToScene line
       line
@@ -425,25 +427,56 @@ Particle::to_string = ->
     square = (x) ->
       x * x
 
+    generation_color1 = [0.8, 0.9, 0]
+    generation_color2 = [0, 0.2, 0.8]
+    generation_width = 2
+    death_color1 = [0.2, 0.3, 0]
+    death_color2 = [0, 0.6, 0.3]
+    death_width = 1
+    best_color1 = [0.9, 0.1, 0.0]
+    best_color2 = [0.9, 0.1, 0.0]
+    best_width = 6
+
     add_particle_line = (scene, particle) ->
-      color1 = [0.8, 0.9, 0]
-      color2 = [0, 0.2, 0.8]
       x = particle.parameter_value[0]
       y = particle.parameter_value[1] or 0
       z = particle.objective_value 
-      z = (z / 100000 * z_scaling)
+      z = 4 - (z / 100000 * z_scaling)
       point1 = [x,0,y]
       point2 = [x,z,y]
-      addLine scene, point1, point2, color1, color2
+      line = addLine scene, point1, point2, generation_color1, generation_color2, generation_width
+      particle.line = line
+
+    kill_particle_line = (scene, particle) ->
+      particle.line.setColors(death_color1, death_color2)
+      particle.line.setWidth(death_width)
+      scale_line particle.line, 0.5
+      scene.removeObjectFromScene(particle.line)
+      particle.line = null
+
+    best_particle_changes = (scene, particle) ->
+      return unless particle.line
+      best_particle = particle
+      coordinates = best_particle.line.getCoordinates()
+      point1 = [coordinates[0], 0, coordinates[2]]
+      point2 = [coordinates[0], -3, coordinates[2]]
+      if best_marker == undefined
+        best_marker = addLine scene, point1, point2, best_color1, best_color2, best_width
+      else 
+        best_marker.setCoordinates(point1, point2)
 
     run_evolution = (scene) ->
       clear_lines scene
+      best_marker = undefined
       parameter = {}
       parameter.scene = scene
       parameter.on_particle_creation = (particle) ->
         add_particle_line(parameter.scene, particle)
       parameter.on_best_particle_changes = (particle) ->
-        add_particle_line(parameter.scene, particle)
+        best_particle_changes(parameter.scene, particle)
+      parameter.on_particle_death = (particle) ->
+        kill_particle_line(parameter.scene, particle)
+
       parameter.objective = (X) ->
         x = X[0]
         y = X[1]
@@ -451,7 +484,7 @@ Particle::to_string = ->
       parameter.search_space = [(min: -4.5, max: 4.5),(min: -4.5, max: 4.5)]
       parameter.number_of_dimensions = 2
       parameter.number_of_particles = 64
-      parameter.number_of_iterations = 64
+      parameter.number_of_iterations = 200 
       algorithm =new differential_evolution(parameter)
       algorithm.run()
 

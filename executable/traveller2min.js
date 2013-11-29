@@ -45,8 +45,22 @@
       return this.parameter.on_particle_creation(particle);
     };
 
-    ParticleStorage.prototype.add_random_particle = function() {
-      var objective_value, parameter_value, parameter_value_xi, search_space, width, xi;
+    ParticleStorage.prototype.check_parameter_value_in_search_space = function(parameter_value) {
+      var dimension_value, i, search_space;
+      i = 0;
+      while (i < parameter_value.length) {
+        dimension_value = parameter_value[i];
+        search_space = this.parameter.search_space[i];
+        if (dimension_value < search_space.min || dimension_value > search_space.max) {
+          return this.create_random_parameter_value();
+        }
+        i++;
+      }
+      return parameter_value;
+    };
+
+    ParticleStorage.prototype.create_random_parameter_value = function() {
+      var parameter_value, parameter_value_xi, search_space, width, xi;
       parameter_value = new Array();
       xi = 0;
       while (xi < this.parameter.number_of_dimensions) {
@@ -56,6 +70,12 @@
         parameter_value.push(parameter_value_xi);
         xi++;
       }
+      return parameter_value;
+    };
+
+    ParticleStorage.prototype.add_random_particle = function() {
+      var objective_value, parameter_value;
+      parameter_value = this.create_random_parameter_value();
       objective_value = this.parameter.objective(parameter_value);
       return this.add(parameter_value, objective_value);
     };
@@ -169,6 +189,7 @@
         random2 = particles.pick_random_particle();
         best = particles.current_best_particle;
         child_parameter_value = particle_mutation(particles.parameter, particle.parameter_value, random1.parameter_value, random2.parameter_value, best.parameter_value);
+        child_parameter_value = particles.check_parameter_value_in_search_space(child_parameter_value);
         child_objective_value = particles.parameter.objective(child_parameter_value);
         return particle.child = new Particle(child_parameter_value, child_objective_value);
       });
@@ -226,11 +247,12 @@
 
   (function() {
     return (function() {
-      var addLine, addVectors, add_axis, add_particle_line, axis_length, clear_lines, drawF1, lines, run_evolution, scene, traveller_main, vector_on_axis, z_scaling;
+      var addLine, addVectors, add_axis, add_particle_line, axis_length, clear_lines, drawF1, lines, run_evolution, scale_lines, scene, traveller_main, vector_on_axis, z_scaling;
       addLine = void 0;
       addVectors = void 0;
       add_axis = void 0;
       clear_lines = void 0;
+      scale_lines = void 0;
       axis_length = void 0;
       drawF1 = void 0;
       lines = void 0;
@@ -311,7 +333,7 @@
         camera = new c3dl.FreeCamera();
         scene.setCamera(camera);
         configure_camera = function(camera, axis) {
-          var direction, new_position, position, rotation_speed, velocity;
+          var direction, factor, new_position, position, rotation_speed, velocity;
           direction = void 0;
           new_position = void 0;
           position = void 0;
@@ -338,13 +360,15 @@
             return;
           }
           if (axis === "u") {
-            z_scaling = z_scaling * 2;
-            drawF1(scene);
+            factor = 2;
+            z_scaling = z_scaling * factor;
+            scale_lines(factor);
             return;
           }
           if (axis === "i") {
-            z_scaling = z_scaling * 0.5;
-            drawF1(scene);
+            factor = 0.5;
+            z_scaling = z_scaling * factor;
+            scale_lines(factor);
             return;
           }
           if (axis === "space") {
@@ -480,6 +504,20 @@
         for (_i = 0, _len = lines.length; _i < _len; _i++) {
           line = lines[_i];
           _results.push(scene.removeObjectFromScene(line));
+        }
+        return _results;
+      };
+      scale_lines = function(factor) {
+        var coordinates, line, point1, point2, z, _i, _len, _results;
+        _results = [];
+        for (_i = 0, _len = lines.length; _i < _len; _i++) {
+          line = lines[_i];
+          coordinates = line.getCoordinates();
+          z = coordinates[4];
+          z *= factor;
+          point1 = [coordinates[0], coordinates[1], coordinates[2]];
+          point2 = [coordinates[3], z, coordinates[5]];
+          _results.push(line.setCoordinates(point1, point2));
         }
         return _results;
       };

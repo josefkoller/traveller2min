@@ -26,16 +26,29 @@ class ParticleStorage
     @particles.push particle
     @parameter.on_particle_creation particle
 
-  add_random_particle: ->
+  check_parameter_value_in_search_space: (parameter_value) ->
+    i = 0
+    while i < parameter_value.length
+      dimension_value = parameter_value[i]
+      search_space = @parameter.search_space[i]
+      return @create_random_parameter_value() if dimension_value < search_space.min or dimension_value > search_space.max
+      i++
+    parameter_value
+
+
+  create_random_parameter_value: () ->
     parameter_value = new Array()
     xi = 0
-
     while xi < @parameter.number_of_dimensions
       search_space = @parameter.search_space[xi]
       width = search_space.max - search_space.min
       parameter_value_xi = search_space.min + width * Math.random()
       parameter_value.push parameter_value_xi
       xi++
+    parameter_value
+
+  add_random_particle: ->
+    parameter_value = @create_random_parameter_value()
     objective_value = @parameter.objective(parameter_value)
     @add parameter_value, objective_value
 
@@ -111,6 +124,7 @@ class differential_evolution
       random2 = particles.pick_random_particle()
       best = particles.current_best_particle
       child_parameter_value = particle_mutation(particles.parameter, particle.parameter_value, random1.parameter_value, random2.parameter_value, best.parameter_value)
+      child_parameter_value = particles.check_parameter_value_in_search_space child_parameter_value
       child_objective_value = particles.parameter.objective(child_parameter_value)
       particle.child = new Particle(child_parameter_value, child_objective_value)
 
@@ -167,6 +181,7 @@ Particle::to_string = ->
     addVectors = undefined
     add_axis = undefined
     clear_lines = undefined
+    scale_lines = undefined
     axis_length = undefined
     drawF1 = undefined
     lines = undefined
@@ -257,12 +272,14 @@ Particle::to_string = ->
           camera.yaw -rotation_speed
           return
         if axis is "u"
-          z_scaling = z_scaling * 2
-          drawF1 scene
+          factor = 2
+          z_scaling = z_scaling * factor
+          scale_lines factor
           return
         if axis is "i"
-          z_scaling = z_scaling * 0.5
-          drawF1 scene
+          factor = 0.5
+          z_scaling = z_scaling * factor
+          scale_lines factor
           return
         if axis is "space"
           run_evolution scene
@@ -383,6 +400,15 @@ Particle::to_string = ->
     clear_lines = (scene) ->
       for line in lines
         scene.removeObjectFromScene line
+
+    scale_lines = (factor) ->
+      for line in lines
+        coordinates = line.getCoordinates()
+        z = coordinates[4]	
+        z *= factor
+        point1 = [coordinates[0], coordinates[1], coordinates[2]]
+        point2 = [coordinates[3], z, coordinates[5]]
+        line.setCoordinates(point1, point2)
 
     addLine = (scene, point1, point2, color, color2) ->
       line = undefined

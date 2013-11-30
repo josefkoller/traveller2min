@@ -1,6 +1,251 @@
 (function() {
-  var Particle, ParticleStorage, differential_evolution, objective1, objective2, run, square,
+  var Particle, ParticleStorage, differential_evolution, i, objective1, objective2, parameter1, parameter2, parameter3, parameter4, parameter5, parameter6, parameter7, parameter8, parameter9, run, square, _i,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
+
+  parameter1 = {};
+
+  parameter1.objective_name = 'beales';
+
+  parameter1.objective = function(X) {
+    var x, y;
+    x = X[0];
+    y = X[1];
+    return square(1.5 - x + x * y) + square(2.25 - x + x * y * y) + square(2.625 - x + x * y * y * y);
+  };
+
+  parameter1.search_space = [
+    {
+      min: -4.5,
+      max: 4.5
+    }, {
+      min: -4.5,
+      max: 4.5
+    }
+  ];
+
+  parameter1.number_of_dimensions = 2;
+
+  parameter1.number_of_particles = 64;
+
+  parameter1.number_of_iterations = 200;
+
+  parameter2 = {};
+
+  parameter2.objective_name = 'rosenbrock';
+
+  parameter2.objective = function(X) {
+    var x, y;
+    x = X[0];
+    y = X[1];
+    return 100 * square(y - x * x) + square(y - 1);
+  };
+
+  parameter2.search_space = [
+    {
+      min: -0.5,
+      max: 3
+    }, {
+      min: -1.5,
+      max: 2.0
+    }
+  ];
+
+  parameter2.number_of_dimensions = 2;
+
+  parameter2.number_of_particles = 64;
+
+  parameter2.number_of_iterations = 200;
+
+  parameter3 = {};
+
+  parameter3.objective_name = 'goldstein-price';
+
+  parameter3.objective = function(X) {
+    var x, y;
+    x = X[0];
+    y = X[1];
+    return (1 + square(x + y + 1) * (19 - 14 * x + 3 * x * x - 14 * y + 6 * x * y + 3 * y * y)) * (30 + square(2 * x - 3 * y) * (18 - 32 * x + 12 * x * x + 48 * y - 36 * x * y + 27 * y * y));
+  };
+
+  parameter3.search_space = [
+    {
+      min: -1.5,
+      max: 1.5
+    }, {
+      min: -1.5,
+      max: 1.5
+    }
+  ];
+
+  parameter3.number_of_dimensions = 2;
+
+  parameter3.number_of_particles = 64;
+
+  parameter2.number_of_iterations = 200;
+
+  parameter4 = {};
+
+  parameter4.objective_name = 'bukin function n. 6';
+
+  parameter4.objective = function(X) {
+    var x, y;
+    x = X[0];
+    y = X[1];
+    return 100 * Math.sqrt(Math.abs(y - 0.01 * x * x)) + 0.01 * Math.abs(x + 10);
+  };
+
+  parameter4.search_space = [
+    {
+      min: -15,
+      max: -5
+    }, {
+      min: -3,
+      max: 3
+    }
+  ];
+
+  parameter4.number_of_dimensions = 2;
+
+  parameter4.number_of_particles = 256;
+
+  parameter4.number_of_iterations = 1000;
+
+  parameter5 = {};
+
+  parameter5.objective_name = 'ackleys';
+
+  parameter5.objective = function(X) {
+    var x, y;
+    x = X[0];
+    y = X[1];
+    return -20 * Math.exp(-0.2 * Math.sqrt(0.5 * (x * x + y * y))) - Math.exp(0.5 * (Math.cos(2 * Math.PI * x) + Math.cos(2 * Math.PI * y))) + 20 + Math.exp(1);
+  };
+
+  parameter5.search_space = [
+    {
+      min: -5,
+      max: 5
+    }, {
+      min: -5,
+      max: 5
+    }
+  ];
+
+  parameter5.number_of_dimensions = 2;
+
+  parameter5.number_of_particles = 64;
+
+  parameter5.number_of_iterations = 200;
+
+  parameter6 = {};
+
+  parameter6.objective_name = 'matyas';
+
+  parameter6.objective = function(X) {
+    var x, y;
+    x = X[0];
+    y = X[1];
+    return 0.26 * (x * x + y * y) - 0.48 * x * y;
+  };
+
+  parameter6.search_space = [
+    {
+      min: -10,
+      max: 10
+    }, {
+      min: -10,
+      max: 10
+    }
+  ];
+
+  parameter6.number_of_dimensions = 2;
+
+  parameter6.number_of_particles = 64;
+
+  parameter6.number_of_iterations = 200;
+
+  parameter7 = {};
+
+  parameter7.objective_name = 'hoelder table';
+
+  parameter7.objective = function(X) {
+    var x, y;
+    x = X[0];
+    y = X[1];
+    return -Math.abs(Math.sin(x) * Math.cos(y) * Math.exp(Math.abs(1 - (Math.sqrt(x * x + y * y) / Math.PI))));
+  };
+
+  parameter7.search_space = [
+    {
+      min: -10,
+      max: 10
+    }, {
+      min: -10,
+      max: 10
+    }
+  ];
+
+  parameter7.number_of_dimensions = 2;
+
+  parameter7.number_of_particles = 64;
+
+  parameter7.number_of_iterations = 400;
+
+  parameter8 = {};
+
+  parameter8.objective_name = 'schaffer function n.3';
+
+  parameter8.objective = function(X) {
+    var x, y;
+    x = X[0];
+    y = X[1];
+    return 0.5 + (square(Math.sin(x * x - y * y)) - 0.5) / square(1 + 0.001 * (x * x + y * y));
+  };
+
+  parameter8.search_space = [
+    {
+      min: -100,
+      max: 100
+    }, {
+      min: -100,
+      max: 100
+    }
+  ];
+
+  parameter8.number_of_dimensions = 2;
+
+  parameter8.number_of_particles = 64;
+
+  parameter8.number_of_iterations = 800;
+
+  parameter9 = {};
+
+  parameter9.objective_name = 'styblinski-tang';
+
+  parameter9.objective = function(X) {
+    var x, z, _i, _len;
+    z = 0;
+    for (_i = 0, _len = X.length; _i < _len; _i++) {
+      x = X[_i];
+      z += x * x * x * x - 16 * x * x + 5 * x;
+    }
+    return z * 0.5;
+  };
+
+  parameter9.search_space = [];
+
+  for (i = _i = 1; _i <= 2; i = ++_i) {
+    parameter9.search_space.push({
+      min: -5,
+      max: 5
+    });
+  }
+
+  parameter9.number_of_dimensions = parameter9.search_space.length;
+
+  parameter9.number_of_particles = 64;
+
+  parameter9.number_of_iterations = 200;
 
   Particle = (function() {
     function Particle(parameter_value, objective_value) {
@@ -18,14 +263,12 @@
     }
 
     ParticleStorage.prototype.shuffle = function() {
-      var i, _results;
+      var _j, _ref, _results;
       this.particles = new Array();
       this.current_best_particle = null;
-      i = 0;
       _results = [];
-      while (i < this.parameter.number_of_particles) {
-        this.add_random_particle();
-        _results.push(i++);
+      for (i = _j = 1, _ref = this.parameter.number_of_particles; 1 <= _ref ? _j < _ref : _j > _ref; i = 1 <= _ref ? ++_j : --_j) {
+        _results.push(this.add_random_particle());
       }
       return _results;
     };
@@ -47,7 +290,7 @@
     };
 
     ParticleStorage.prototype.check_parameter_value_in_search_space = function(parameter_value) {
-      var dimension_value, i, search_space;
+      var dimension_value, search_space;
       i = 0;
       while (i < parameter_value.length) {
         dimension_value = parameter_value[i];
@@ -88,7 +331,7 @@
     };
 
     ParticleStorage.prototype.for_each = function(particle_action) {
-      var i, particle, _results;
+      var particle, _results;
       i = 0;
       _results = [];
       while (i < this.particles.length) {
@@ -208,7 +451,8 @@
           particles.parameter.on_particle_death(particle);
           particle.parameter_value = particle.child.parameter_value;
           particle.objective_value = particle.child.objective_value;
-          return particles.parameter.on_particle_creation(particle);
+          particles.parameter.on_particle_creation(particle);
+          return particles.check_best_particle(particle);
         }
       });
     };
@@ -229,11 +473,11 @@
   };
 
   Particle.prototype.to_string = function() {
-    var dimension_value, parameter_value, _i, _len, _ref;
+    var dimension_value, parameter_value, _j, _len, _ref;
     parameter_value = "(";
     _ref = this.parameter_value;
-    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      dimension_value = _ref[_i];
+    for (_j = 0, _len = _ref.length; _j < _len; _j++) {
+      dimension_value = _ref[_j];
       parameter_value += dimension_value + ", ";
     }
     parameter_value += ")";
@@ -242,16 +486,16 @@
 
   (function() {
     return (function() {
-      var addLine, addVectors, add_axis, add_particle_line, axis_length, best_color1, best_color2, best_marker, best_particle, best_particle_changes, best_width, clear_lines, death_color1, death_color2, death_width, drawF1, generation_color1, generation_color2, generation_width, kill_particle_line, lines, run_evolution, scale_line, scale_lines, scene, traveller_main, vector_on_axis, z_scaling;
+      var addLine, addVectors, add_axis, add_particle_line, axis_length, best_color1, best_color2, best_marker, best_particle_changes, best_width, clear_lines, death_color1, death_color2, death_width, drawMeshgrid, generation_color1, generation_color2, generation_width, kill_particle_line, lines, parameter, run_evolution, scale_line, scale_lines, scene, traveller_main, vector_on_axis, z_scaling;
       addLine = void 0;
       addVectors = void 0;
       add_axis = void 0;
       clear_lines = void 0;
-      best_particle = void 0;
       best_marker = void 0;
       scale_lines = void 0;
       axis_length = void 0;
-      drawF1 = void 0;
+      parameter = void 0;
+      drawMeshgrid = void 0;
       lines = void 0;
       scene = void 0;
       square = void 0;
@@ -263,7 +507,7 @@
       square = void 0;
       traveller_main = void 0;
       scene = void 0;
-      drawF1 = void 0;
+      drawMeshgrid = void 0;
       z_scaling = 1;
       lines = [];
       axis_length = void 0;
@@ -330,7 +574,7 @@
         camera = new c3dl.FreeCamera();
         scene.setCamera(camera);
         configure_camera = function(camera, axis) {
-          var direction, factor, new_position, position, rotation_speed, velocity;
+          var direction, factor, marker_coordinates, min, new_position, position, rotation_speed, velocity;
           direction = void 0;
           new_position = void 0;
           position = void 0;
@@ -372,6 +616,15 @@
             run_evolution(scene);
             return;
           }
+          if (axis === 'm') {
+            if (!best_marker) {
+              return;
+            }
+            marker_coordinates = best_marker.getCoordinates();
+            min = [marker_coordinates[0], marker_coordinates[1], marker_coordinates[2]];
+            camera.setLookAtPoint(min);
+            return;
+          }
           position = camera.getPosition();
           direction = camera.getDir();
           velocity = 0.5;
@@ -379,8 +632,7 @@
             velocity = velocity * -1;
           }
           new_position = [position[0] + direction[0] * velocity, position[1] + direction[1] * velocity, position[2] + direction[2] * velocity];
-          camera.setPosition(new_position);
-          return camera.setLookAtPoint([0, 0, 0]);
+          return camera.setPosition(new_position);
         };
         configure_camera(camera, "z");
         scene.setKeyboardCallback(function(event) {
@@ -400,7 +652,8 @@
             68: "d",
             85: "u",
             73: "i",
-            32: 'space'
+            32: 'space',
+            77: 'm'
           };
           configure_camera(scene.getCamera(), key_mapping[event.keyCode]);
           p = camera.getPosition();
@@ -411,46 +664,10 @@
         });
         camera.setPosition([10, 3, -8]);
         camera.setLookAtPoint([0, 0, 0]);
-        create_light = function(scene, diffuse_color) {
-          var light;
-          light = void 0;
-          light = void 0;
-          light = new c3dl.PositionalLight();
-          light.setDiffuse(diffuse_color);
-          light.setOn(true);
-          scene.addLight(light);
-          return {
-            light: light,
-            move: function(position) {
-              return this.light.setPosition(position);
-            }
-          };
-        };
-        camera_light = create_light(scene, [1, 2, 3]);
-        traveller = {
-          light: camera_light,
-          move: function(position) {
-            this.geometry.move(position);
-            return this.light.move(position);
-          },
-          display: function(position) {
-            var p, text;
-            p = void 0;
-            text = void 0;
-            p = void 0;
-            text = void 0;
-            p = [position[0].toFixed(2), position[1].toFixed(2), position[2].toFixed(2)];
-            text = "" + photon_index + ": x=" + p[0] + ",y=" + p[1] + ",z=" + p[2];
-            return $("#traveller_display").html(text);
-          }
-        };
-        scene.startScene();
-        generation = [];
-        options = {};
-        return options.color;
+        return scene.startScene();
       };
-      drawF1 = function(scene) {
-        var color1, color2, h, i, min, point1, point2, s, x, y, z, _results;
+      drawMeshgrid = function(scene) {
+        var X, color1, color2, h, min, point1, point2, s, search_space2, x, xh, xmax, xmin, xs, y, yh, ymax, ymin, ys, z, _results;
         color1 = void 0;
         color2 = void 0;
         h = void 0;
@@ -469,16 +686,28 @@
         add_axis(scene, "z", axis_length);
         color1 = [1, 0, 0];
         color2 = [0, 0, 1];
-        h = 4.5;
-        s = 0.5;
-        y = -h;
+        xmin = parameter.search_space[0].min;
+        xmax = parameter.search_space[0].max;
+        search_space2 = parameter.search_space[1] || {
+          min: 0,
+          max: 0
+        };
+        ymin = search_space2.min;
+        ymax = search_space2.max;
+        xh = xmax - xmin;
+        yh = ymax - ymin;
+        s = 20;
+        xs = (xmax - xmin) / s;
+        ys = (ymax - ymin) / s;
+        y = ymin;
         _results = [];
         min = {};
         min.z = void 0;
-        while (y <= h) {
-          x = -h;
-          while (x <= h) {
-            z = square(1.5 - x + x * y) + square(2.25 - x + x * y * y) + square(2.625 - x + x * y * y * y);
+        while (y <= ymax) {
+          x = xmin;
+          while (x <= xmax) {
+            X = [x, y];
+            z = parameter.objective(X);
             z = z / 100000 * z_scaling;
             if (min.z === void 0 || z < min.z) {
               min.x = x;
@@ -488,27 +717,27 @@
             point1 = [x, 0, y];
             point2 = [x, z, y];
             addLine(scene, point1, point2, color1, color2);
-            x = x + s;
+            x = x + xs;
           }
-          _results.push(y = y + s);
+          y = y + ys;
         }
         $("#termination_display").html("min: " + min.x + "|" + min.z + "|" + min.y);
         return _results;
       };
       clear_lines = function(scene) {
-        var line, _i, _len, _results;
+        var line, _j, _len, _results;
         _results = [];
-        for (_i = 0, _len = lines.length; _i < _len; _i++) {
-          line = lines[_i];
+        for (_j = 0, _len = lines.length; _j < _len; _j++) {
+          line = lines[_j];
           _results.push(scene.removeObjectFromScene(line));
         }
         return _results;
       };
       scale_lines = function(factor) {
-        var line, _i, _len, _results;
+        var line, _j, _len, _results;
         _results = [];
-        for (_i = 0, _len = lines.length; _i < _len; _i++) {
-          line = lines[_i];
+        for (_j = 0, _len = lines.length; _j < _len; _j++) {
+          line = lines[_j];
           _results.push(scale_line(line, factor));
         }
         return _results;
@@ -572,8 +801,7 @@
         if (!particle.line) {
           return;
         }
-        best_particle = particle;
-        coordinates = best_particle.line.getCoordinates();
+        coordinates = particle.line.getCoordinates();
         point1 = [coordinates[0], 0, coordinates[2]];
         point2 = [coordinates[0], -3, coordinates[2]];
         if (best_marker === void 0) {
@@ -583,10 +811,14 @@
         }
       };
       run_evolution = function(scene) {
-        var algorithm, parameter;
+        var algorithm;
         clear_lines(scene);
         best_marker = void 0;
-        parameter = {};
+        parameter = parameter1;
+        $('#objective_name').html(parameter.objective_name);
+        $('#number_of_particles').html(parameter.number_of_particles);
+        $('#number_of_iterations').html(parameter.number_of_iterations);
+        $('#objective').html(parameter.objective.toString());
         parameter.scene = scene;
         parameter.on_particle_creation = function(particle) {
           return add_particle_line(parameter.scene, particle);
@@ -597,24 +829,7 @@
         parameter.on_particle_death = function(particle) {
           return kill_particle_line(parameter.scene, particle);
         };
-        parameter.objective = function(X) {
-          var x, y;
-          x = X[0];
-          y = X[1];
-          return square(1.5 - x + x * y) + square(2.25 - x + x * y * y) + square(2.625 - x + x * y * y * y);
-        };
-        parameter.search_space = [
-          {
-            min: -4.5,
-            max: 4.5
-          }, {
-            min: -4.5,
-            max: 4.5
-          }
-        ];
-        parameter.number_of_dimensions = 2;
-        parameter.number_of_particles = 64;
-        parameter.number_of_iterations = 200;
+        drawMeshgrid(scene);
         algorithm = new differential_evolution(parameter);
         return algorithm.run();
       };

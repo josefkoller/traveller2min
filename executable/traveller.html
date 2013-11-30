@@ -7,11 +7,11 @@
 	<title>Traveller</title>
   <script src='jquery_min.js'></script>
   <script type="application/javascript" src="../canvas3dapi/c3dapi.js" ></script>
+  <script type="application/javascript" src="objectives.js"></script>
   <script type="application/javascript" src="traveller2min.js"></script>
  </head>
  <body>
-   <input type="button" value="run" onclick="run();" />
-   <canvas id="traveller_canvas" style="border: 2px solid" width="800" height="400"></canvas>
+   <canvas id="traveller_canvas" style="border: 2px solid" width="1200" height="600"></canvas>
    <div>
     control: w,a,s,d,
   </div>
@@ -19,6 +19,20 @@
   </div>
   <div id="termination_display">
   </div>
- </body>
+  Number of Particles/Generation:<D-r>
+  <div id="number_of_particles">
+  </div>
+  Number of Iterations:
+  <div id="number_of_iterations">
+  </div>
+  <div id="objective_name">
+  </div>
+  <pre id="objective">
+  </pre>
+  Search Space:
+  <ul id="search_space">
+  </ul>
+
+
  </body>
 </html>

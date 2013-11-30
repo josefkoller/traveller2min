@@ -1,6 +1,109 @@
 # differential evolution algorithm
 
-# TODO: convergence tests
+parameter1 = {}
+parameter1.objective_name = 'beales'
+parameter1.objective = (X) ->
+  x = X[0]
+  y = X[1]
+  square(1.5 - x + x * y) + square(2.25 - x + x * y * y) + square(2.625 - x + x * y * y * y)
+parameter1.search_space = [(min: -4.5, max: 4.5),(min: -4.5, max: 4.5)]
+parameter1.number_of_dimensions = 2
+parameter1.number_of_particles = 64
+parameter1.number_of_iterations = 200 
+
+parameter2 = {}
+parameter2.objective_name = 'rosenbrock'
+parameter2.objective = (X) ->
+	x = X[0]
+	y = X[1]
+	(100*square(y-x*x)+square(y-1))
+parameter2.search_space = [(min: -0.5, max: 3),(min: -1.5, max: 2.0)]
+parameter2.number_of_dimensions = 2
+parameter2.number_of_particles = 64
+parameter2.number_of_iterations = 200 
+
+parameter3 = {}
+parameter3.objective_name = 'goldstein-price'
+parameter3.objective = (X) ->
+  x = X[0]
+  y = X[1]
+  (1+square(x+y+1)*(19-14*x+3*x*x-14*y+6*x*y+3*y*y))*(30+square(2*x-3*y)*(18-32*x+12*x*x+48*y-36*x*y+27*y*y))
+parameter3.search_space = [(min: -1.5, max: 1.5),(min: -1.5, max: 1.5)]
+parameter3.number_of_dimensions = 2
+parameter3.number_of_particles = 64
+parameter2.number_of_iterations = 200 
+
+parameter4 = {}
+parameter4.objective_name = 'bukin function n. 6'
+parameter4.objective = (X) ->
+  x = X[0]
+  y = X[1]
+  (100*Math.sqrt(Math.abs(y-0.01*x*x))+0.01*Math.abs(x+10))
+parameter4.search_space = [(min: -15, max: -5),(min: -3, max: 3)]
+parameter4.number_of_dimensions = 2
+parameter4.number_of_particles = 256 
+parameter4.number_of_iterations = 1000 
+
+parameter5 = {}
+parameter5.objective_name = 'ackleys'
+parameter5.objective = (X) ->
+  x = X[0]
+  y = X[1]
+  (-20*Math.exp(-0.2*Math.sqrt(0.5*(x*x+y*y)))-Math.exp(0.5*(Math.cos(2*Math.PI*x)+Math.cos(2*Math.PI*y)))+20+Math.exp(1))
+parameter5.search_space = [(min: -5, max: 5),(min: -5, max: 5)]
+parameter5.number_of_dimensions = 2
+parameter5.number_of_particles = 64 
+parameter5.number_of_iterations = 200 
+
+parameter6 = {}
+parameter6.objective_name = 'matyas'
+parameter6.objective = (X) ->
+  x = X[0]
+  y = X[1]
+  (0.26*(x*x+y*y)-0.48*x*y)
+parameter6.search_space = [(min: -10, max: 10),(min: -10, max: 10)]
+parameter6.number_of_dimensions = 2
+parameter6.number_of_particles = 64 
+parameter6.number_of_iterations = 200 
+
+parameter7 = {}
+parameter7.objective_name = 'hoelder table'
+parameter7.objective = (X) ->
+  x = X[0]
+  y = X[1]
+  (-Math.abs(Math.sin(x)*Math.cos(y)*Math.exp(Math.abs(1-(Math.sqrt(x*x+y*y)/Math.PI)))))
+parameter7.search_space = [(min: -10, max: 10),(min: -10, max: 10)]
+parameter7.number_of_dimensions = 2
+parameter7.number_of_particles = 64 
+parameter7.number_of_iterations = 400 
+
+parameter8 = {}
+parameter8.objective_name = 'schaffer function n.3'
+parameter8.objective = (X) ->
+  x = X[0]
+  y = X[1]
+  (0.5+(square(Math.sin(x*x-y*y))-0.5)/square(1+0.001*(x*x+y*y)))
+parameter8.search_space = [(min: -100, max: 100),(min: -100, max: 100)]
+parameter8.number_of_dimensions = 2
+parameter8.number_of_particles = 64 
+parameter8.number_of_iterations = 800 
+
+parameter9 = {}
+parameter9.objective_name = 'styblinski-tang'
+parameter9.objective = (X) ->
+  z = 0
+  for x in X
+    z += x*x*x*x - 16*x*x + 5*x
+  z*0.5
+parameter9.search_space = []
+for i in [1..2]
+  parameter9.search_space.push(min: -5, max: 5)
+parameter9.number_of_dimensions = parameter9.search_space.length;
+parameter9.number_of_particles = 64 
+parameter9.number_of_iterations = 200 
+
+
+# Particle class...
 class Particle 
   constructor: (parameter_value, objective_value) ->
     @parameter_value = parameter_value
@@ -11,10 +114,7 @@ class ParticleStorage
   shuffle:  ->
     @particles = new Array()
     @current_best_particle = null
-    i = 0
-    while i < @parameter.number_of_particles
-      @add_random_particle()
-      i++
+    @add_random_particle() for i in [1...@parameter.number_of_particles]
 
   check_best_particle: (new_particle) ->
     return  if @current_best_particle? and @current_best_particle.objective_value < new_particle.objective_value
@@ -141,6 +241,7 @@ class differential_evolution
         particle.parameter_value = particle.child.parameter_value
         particle.objective_value = particle.child.objective_value
         particles.parameter.on_particle_creation(particle)
+        particles.check_best_particle(particle)
 
   termination: =>
     best = @particles.current_best_particle
@@ -178,11 +279,11 @@ Particle::to_string = ->
     addVectors = undefined
     add_axis = undefined
     clear_lines = undefined
-    best_particle = undefined
     best_marker = undefined
     scale_lines = undefined
     axis_length = undefined
-    drawF1 = undefined
+    parameter = undefined
+    drawMeshgrid = undefined
     lines = undefined
     scene = undefined
     square = undefined
@@ -194,7 +295,7 @@ Particle::to_string = ->
     square = undefined
     traveller_main = undefined
     scene = undefined
-    drawF1 = undefined
+    drawMeshgrid = undefined
     z_scaling = 1
     lines = []
     axis_length = undefined
@@ -282,9 +383,12 @@ Particle::to_string = ->
           return
         if axis is "space"
           run_evolution scene
-          # first_line = lines[0]
-          # first_line.setColors([0.2,0.4,0],[1,1,1] )
-          # first_line.setCoordinates([0,0,0], [10,10,10])
+          return
+        if axis is 'm' # go no minimum
+          return unless best_marker
+          marker_coordinates = best_marker.getCoordinates()
+          min = [marker_coordinates[0], marker_coordinates[1], marker_coordinates[2]]
+          camera.setLookAtPoint min
           return
         position = camera.getPosition()
         direction = camera.getDir()
@@ -292,7 +396,6 @@ Particle::to_string = ->
         velocity = velocity * -1  if axis is "s"
         new_position = [position[0] + direction[0] * velocity, position[1] + direction[1] * velocity, position[2] + direction[2] * velocity]
         camera.setPosition new_position
-        camera.setLookAtPoint [0, 0, 0]
 
       configure_camera camera, "z"
       scene.setKeyboardCallback (event) ->
@@ -312,49 +415,18 @@ Particle::to_string = ->
           85: "u"
           73: "i"
           32: 'space'
+          77: 'm'
         configure_camera scene.getCamera(), key_mapping[event.keyCode]
         p = camera.getPosition()
         d = camera.getDir()
         text = "pos: (" + p[0] + "," + p[1] + "," + p[2] + "); " + "dir:  (" + d[0] + "," + d[1] + "," + d[2] + ")"
         $("#traveller_display").html text
         false
-
       camera.setPosition [10, 3, -8]
       camera.setLookAtPoint [0, 0, 0]
-      create_light = (scene, diffuse_color) ->
-        light = undefined
-        light = undefined
-        light = new c3dl.PositionalLight()
-        light.setDiffuse diffuse_color
-        light.setOn true
-        scene.addLight light
-        light: light
-        move: (position) ->
-          @light.setPosition position
-
-      camera_light = create_light(scene, [1, 2, 3])
-      traveller =
-        light: camera_light
-        move: (position) ->
-          @geometry.move position
-          @light.move position
-
-        display: (position) ->
-          p = undefined
-          text = undefined
-          p = undefined
-          text = undefined
-          p = [position[0].toFixed(2), position[1].toFixed(2), position[2].toFixed(2)]
-          text = "" + photon_index + ": x=" + p[0] + ",y=" + p[1] + ",z=" + p[2]
-          $("#traveller_display").html text
-
       scene.startScene()
-      # drawF1 scene
-      generation = []
-      options = {}
-      options.color
 
-    drawF1 = (scene) ->
+    drawMeshgrid = (scene) ->
       color1 = undefined
       color2 = undefined
       h = undefined
@@ -373,16 +445,26 @@ Particle::to_string = ->
       add_axis scene, "z", axis_length
       color1 = [1, 0, 0]
       color2 = [0, 0, 1]
-      h = 4.5
-      s = 0.5
-      y = -h
+      xmin = parameter.search_space[0].min
+      xmax = parameter.search_space[0].max
+
+      search_space2 = parameter.search_space[1] or (min: 0, max:0)
+      ymin = search_space2.min
+      ymax = search_space2.max
+      xh = xmax - xmin
+      yh = ymax - ymin
+      s = 20
+      xs = (xmax-xmin)/s
+      ys = (ymax-ymin)/s
+      y = ymin
       _results = []
       min = {}
       min.z = undefined
-      while y <= h
-        x = -h
-        while x <= h
-          z = square(1.5 - x + x * y) + square(2.25 - x + x * y * y) + square(2.625 - x + x * y * y * y)
+      while y <= ymax
+        x = xmin
+        while x <= xmax
+          X = [x,y]
+          z = parameter.objective(X);
           z = z / 100000 * z_scaling
           if min.z == undefined or z < min.z
             min.x = x
@@ -391,8 +473,8 @@ Particle::to_string = ->
           point1 = [x, 0, y]
           point2 = [x, z, y]
           addLine scene, point1, point2, color1, color2
-          x = x + s
-        _results.push y = y + s
+          x = x + xs
+        y = y + ys
       $("#termination_display").html "min: #{min.x}|#{min.z}|#{min.y}"
       _results
 
@@ -440,7 +522,7 @@ Particle::to_string = ->
     add_particle_line = (scene, particle) ->
       x = particle.parameter_value[0]
       y = particle.parameter_value[1] or 0
-      z = particle.objective_value 
+      z = particle.objective_value
       z = 4 - (z / 100000 * z_scaling)
       point1 = [x,0,y]
       point2 = [x,z,y]
@@ -453,22 +535,30 @@ Particle::to_string = ->
       scale_line particle.line, 0.5
       scene.removeObjectFromScene(particle.line)
       particle.line = null
+      #x = 2
+      #for i in [1..1000000]
+      #  x = Math.sqrt(x)
 
     best_particle_changes = (scene, particle) ->
       return unless particle.line
-      best_particle = particle
-      coordinates = best_particle.line.getCoordinates()
+      coordinates = particle.line.getCoordinates()
       point1 = [coordinates[0], 0, coordinates[2]]
       point2 = [coordinates[0], -3, coordinates[2]]
       if best_marker == undefined
         best_marker = addLine scene, point1, point2, best_color1, best_color2, best_width
-      else 
-        best_marker.setCoordinates(point1, point2)
+      else
+        best_marker.setCoordinates point1, point2
 
     run_evolution = (scene) ->
       clear_lines scene
       best_marker = undefined
-      parameter = {}
+      parameter = parameter1 # PARAMETER SELECTION
+      $('#objective_name').html(parameter.objective_name)
+      $('#number_of_particles').html(parameter.number_of_particles)
+      $('#number_of_iterations').html(parameter.number_of_iterations)
+      $('#objective').html(parameter.objective.toString())
+    #  for search_space in parameter.search_space
+    #    $('#search_space').append('<li>').append('min: ' + search_space.min + ' max: ' + search_space.max)
       parameter.scene = scene
       parameter.on_particle_creation = (particle) ->
         add_particle_line(parameter.scene, particle)
@@ -476,18 +566,11 @@ Particle::to_string = ->
         best_particle_changes(parameter.scene, particle)
       parameter.on_particle_death = (particle) ->
         kill_particle_line(parameter.scene, particle)
-
-      parameter.objective = (X) ->
-        x = X[0]
-        y = X[1]
-        square(1.5 - x + x * y) + square(2.25 - x + x * y * y) + square(2.625 - x + x * y * y * y)
-      parameter.search_space = [(min: -4.5, max: 4.5),(min: -4.5, max: 4.5)]
-      parameter.number_of_dimensions = 2
-      parameter.number_of_particles = 64
-      parameter.number_of_iterations = 200 
+      drawMeshgrid scene
       algorithm =new differential_evolution(parameter)
       algorithm.run()
 
     c3dl.addMainCallBack traveller_main, "traveller_canvas"
   ).call this
 ).call this
+

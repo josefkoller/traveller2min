@@ -245,7 +245,7 @@
 
   parameter9.number_of_particles = 64;
 
-  parameter9.number_of_iterations = 200;
+  parameter9.number_of_iterations = 100;
 
   Particle = (function() {
     function Particle(parameter_value, objective_value) {
@@ -812,7 +812,7 @@
         }
       };
       run_evolution = function(scene) {
-        var algorithm, search_space, _j, _len, _ref;
+        var algorithm, element, search_space, _j, _len, _ref;
         clear_lines(scene);
         best_marker = void 0;
         parameter = parameter9;
@@ -824,7 +824,9 @@
         _ref = parameter.search_space;
         for (_j = 0, _len = _ref.length; _j < _len; _j++) {
           search_space = _ref[_j];
-          $('#search_space').append('<li>').append('min: ' + search_space.min + ' max: ' + search_space.max);
+          element = $('<li>');
+          element.append('min: ' + search_space.min + ' max: ' + search_space.max);
+          $('#search_space').append(element);
         }
         parameter.scene = scene;
         parameter.on_particle_creation = function(particle) {

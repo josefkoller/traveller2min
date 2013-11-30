@@ -99,8 +99,8 @@ parameter9.search_space = []
 for i in [1..2]
   parameter9.search_space.push(min: -5, max: 5)
 parameter9.number_of_dimensions = parameter9.search_space.length
-parameter9.number_of_particles = 64
-parameter9.number_of_iterations = 200
+parameter9.number_of_particles = 64 
+parameter9.number_of_iterations = 100
 
 
 # Particle class...
@@ -548,7 +548,9 @@ Particle::to_string = ->
       $('#objective').html(parameter.objective.toString())
       $('#search_space').html('')
       for search_space in parameter.search_space
-        $('#search_space').append('<li>').append('min: ' + search_space.min + ' max: ' + search_space.max)
+        element = $('<li>')
+        element.append('min: ' + search_space.min + ' max: ' + search_space.max)
+        $('#search_space').append(element)
       parameter.scene = scene
       parameter.on_particle_creation = (particle) ->
         add_particle_line(parameter.scene, particle)

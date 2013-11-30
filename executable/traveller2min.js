@@ -383,12 +383,22 @@
 
     differential_evolution.prototype.run = function() {
       this.initialize();
-      while (this.start_iteration()) {
-        this.mutation();
-        this.recombination();
-        this.selection();
+      return this.iteration();
+    };
+
+    differential_evolution.prototype.iteration = function() {
+      var that;
+      this.mutation();
+      this.recombination();
+      this.selection();
+      that = this;
+      if (this.start_iteration()) {
+        return window.setTimeout((function() {
+          return that.iteration();
+        }), 10);
+      } else {
+        return this.termination();
       }
-      return this.termination();
     };
 
     differential_evolution.prototype.initialize = function() {
@@ -818,7 +828,7 @@
         var algorithm, element, search_space, _j, _len, _ref;
         clear_lines(scene);
         best_marker = void 0;
-        parameter = parameter9;
+        parameter = parameter6;
         $('#objective_name').html(parameter.objective_name);
         $('#number_of_particles').html(parameter.number_of_particles);
         $('#number_of_iterations').html(parameter.number_of_iterations);

@@ -191,11 +191,17 @@ class differential_evolution
 
   run: =>
     @initialize()
-    while @start_iteration()
-      @mutation()
-      @recombination()
-      @selection()
-    @termination()
+    @iteration()
+
+  iteration: () ->
+    @mutation()
+    @recombination()
+    @selection()
+    that = this
+    if(@start_iteration())
+      window.setTimeout((() -> that.iteration()), 10)
+    else
+      @termination()
 
   initialize: => 
     @particles = new ParticleStorage(@parameter)
@@ -543,7 +549,7 @@ Particle::to_string = ->
     run_evolution = (scene) ->
       clear_lines scene
       best_marker = undefined
-      parameter = parameter9 # PARAMETER SELECTION
+      parameter = parameter6 # PARAMETER SELECTION
       $('#objective_name').html(parameter.objective_name)
       $('#number_of_particles').html(parameter.number_of_particles)
       $('#number_of_iterations').html(parameter.number_of_iterations)

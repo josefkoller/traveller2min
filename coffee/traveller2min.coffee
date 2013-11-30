@@ -8,8 +8,8 @@ parameter1.objective = (X) ->
   square(1.5 - x + x * y) + square(2.25 - x + x * y * y) + square(2.625 - x + x * y * y * y)
 parameter1.search_space = [(min: -4.5, max: 4.5),(min: -4.5, max: 4.5)]
 parameter1.number_of_dimensions = 2
-parameter1.number_of_particles = 64
-parameter1.number_of_iterations = 200 
+parameter1.number_of_particles = 256 
+parameter1.number_of_iterations = 500
 
 parameter2 = {}
 parameter2.objective_name = 'rosenbrock'
@@ -20,7 +20,7 @@ parameter2.objective = (X) ->
 parameter2.search_space = [(min: -0.5, max: 3),(min: -1.5, max: 2.0)]
 parameter2.number_of_dimensions = 2
 parameter2.number_of_particles = 64
-parameter2.number_of_iterations = 200 
+parameter2.number_of_iterations = 200
 
 parameter3 = {}
 parameter3.objective_name = 'goldstein-price'
@@ -31,7 +31,7 @@ parameter3.objective = (X) ->
 parameter3.search_space = [(min: -1.5, max: 1.5),(min: -1.5, max: 1.5)]
 parameter3.number_of_dimensions = 2
 parameter3.number_of_particles = 64
-parameter2.number_of_iterations = 200 
+parameter2.number_of_iterations = 200
 
 parameter4 = {}
 parameter4.objective_name = 'bukin function n. 6'
@@ -41,8 +41,8 @@ parameter4.objective = (X) ->
   (100*Math.sqrt(Math.abs(y-0.01*x*x))+0.01*Math.abs(x+10))
 parameter4.search_space = [(min: -15, max: -5),(min: -3, max: 3)]
 parameter4.number_of_dimensions = 2
-parameter4.number_of_particles = 256 
-parameter4.number_of_iterations = 1000 
+parameter4.number_of_particles = 256
+parameter4.number_of_iterations = 1000
 
 parameter5 = {}
 parameter5.objective_name = 'ackleys'
@@ -52,8 +52,8 @@ parameter5.objective = (X) ->
   (-20*Math.exp(-0.2*Math.sqrt(0.5*(x*x+y*y)))-Math.exp(0.5*(Math.cos(2*Math.PI*x)+Math.cos(2*Math.PI*y)))+20+Math.exp(1))
 parameter5.search_space = [(min: -5, max: 5),(min: -5, max: 5)]
 parameter5.number_of_dimensions = 2
-parameter5.number_of_particles = 64 
-parameter5.number_of_iterations = 200 
+parameter5.number_of_particles = 64
+parameter5.number_of_iterations = 200
 
 parameter6 = {}
 parameter6.objective_name = 'matyas'
@@ -63,8 +63,8 @@ parameter6.objective = (X) ->
   (0.26*(x*x+y*y)-0.48*x*y)
 parameter6.search_space = [(min: -10, max: 10),(min: -10, max: 10)]
 parameter6.number_of_dimensions = 2
-parameter6.number_of_particles = 64 
-parameter6.number_of_iterations = 200 
+parameter6.number_of_particles = 64
+parameter6.number_of_iterations = 200
 
 parameter7 = {}
 parameter7.objective_name = 'hoelder table'
@@ -74,8 +74,8 @@ parameter7.objective = (X) ->
   (-Math.abs(Math.sin(x)*Math.cos(y)*Math.exp(Math.abs(1-(Math.sqrt(x*x+y*y)/Math.PI)))))
 parameter7.search_space = [(min: -10, max: 10),(min: -10, max: 10)]
 parameter7.number_of_dimensions = 2
-parameter7.number_of_particles = 64 
-parameter7.number_of_iterations = 400 
+parameter7.number_of_particles = 64
+parameter7.number_of_iterations = 400
 
 parameter8 = {}
 parameter8.objective_name = 'schaffer function n.3'
@@ -98,13 +98,13 @@ parameter9.objective = (X) ->
 parameter9.search_space = []
 for i in [1..2]
   parameter9.search_space.push(min: -5, max: 5)
-parameter9.number_of_dimensions = parameter9.search_space.length;
-parameter9.number_of_particles = 64 
-parameter9.number_of_iterations = 200 
+parameter9.number_of_dimensions = parameter9.search_space.length
+parameter9.number_of_particles = 64
+parameter9.number_of_iterations = 200
 
 
 # Particle class...
-class Particle 
+class Particle
   constructor: (parameter_value, objective_value) ->
     @parameter_value = parameter_value
     @objective_value = objective_value
@@ -114,7 +114,10 @@ class ParticleStorage
   shuffle:  ->
     @particles = new Array()
     @current_best_particle = null
-    @add_random_particle() for i in [1...@parameter.number_of_particles]
+    shuffling_i = 0
+    while shuffling_i < @parameter.number_of_particles
+      @add_random_particle()
+      shuffling_i++
 
   check_best_particle: (new_particle) ->
     return  if @current_best_particle? and @current_best_particle.objective_value < new_particle.objective_value
@@ -128,24 +131,24 @@ class ParticleStorage
     @check_best_particle particle
 
   check_parameter_value_in_search_space: (parameter_value) ->
-    i = 0
-    while i < parameter_value.length
-      dimension_value = parameter_value[i]
-      search_space = @parameter.search_space[i]
+    parameter_i = 0
+    while parameter_i < parameter_value.length
+      dimension_value = parameter_value[parameter_i]
+      search_space = @parameter.search_space[parameter_i]
       return @create_random_parameter_value() if dimension_value < search_space.min or dimension_value > search_space.max
-      i++
+      parameter_i++
     parameter_value
 
 
   create_random_parameter_value: () ->
     parameter_value = new Array()
-    xi = 0
-    while xi < @parameter.number_of_dimensions
-      search_space = @parameter.search_space[xi]
+    ri = 0
+    while ri < @parameter.number_of_dimensions
+      search_space = @parameter.search_space[ri]
       width = search_space.max - search_space.min
       parameter_value_xi = search_space.min + width * Math.random()
       parameter_value.push parameter_value_xi
-      xi++
+      ri++
     parameter_value
 
   add_random_particle: ->
@@ -159,16 +162,10 @@ class ParticleStorage
     index = Math.round(Math.random() * (@particles.length - 1))
     @particles[index]
 
-  for_each: (particle_action) ->
-    i = 0
-
-    while i < @particles.length
-      particle = @particles[i]
-      particle_action particle, this
-      i++
 run = ->
   algorithm = new differential_evolution()
   algorithm.run()
+
 objective1 = (x) ->
   x * x
 
@@ -191,6 +188,7 @@ class differential_evolution
     @parameter.mutation_factor1 = parameter.mutation_factor1 or 0.7
     @parameter.mutation_factor2 = parameter.mutation_factor2 or 0.9
     @parameter.cross_over_ratio = parameter.cross_over_ratio or 0.8
+
   run: =>
     @initialize()
     while @start_iteration()
@@ -209,39 +207,36 @@ class differential_evolution
     @current_iteration++
     true
 
-  mutation: ->
+  mutation: =>
     particle_mutation = (parameter, current, random1, random2, best) ->
       child = new Array()
       xi = 0
-
       while xi < parameter.number_of_dimensions
         child_xi = current[xi] + parameter.mutation_factor1 * (random2[xi] - random1[xi]) + parameter.mutation_factor2 * (best[xi] - current[xi])
         child.push child_xi
         xi++
       child
-
-    @particles.for_each (particle, particles) ->
-      random1 = particles.pick_random_particle()
-      random2 = particles.pick_random_particle()
-      best = particles.current_best_particle
-      child_parameter_value = particle_mutation(particles.parameter, particle.parameter_value, random1.parameter_value, random2.parameter_value, best.parameter_value)
-      child_parameter_value = particles.check_parameter_value_in_search_space child_parameter_value
-      child_objective_value = particles.parameter.objective(child_parameter_value)
+    for particle in @particles.particles
+      random1 = @particles.pick_random_particle()
+      random2 = @particles.pick_random_particle()
+      best = @particles.current_best_particle
+      child_parameter_value = particle_mutation(@parameter, particle.parameter_value, random1.parameter_value, random2.parameter_value, best.parameter_value)
+      child_parameter_value = @particles.check_parameter_value_in_search_space child_parameter_value
+      child_objective_value = @parameter.objective(child_parameter_value)
       particle.child = new Particle(child_parameter_value, child_objective_value)
 
-
   recombination: =>
-    @particles.for_each (particle, particles) ->
-      particle.cross_over = Math.random() < particles.parameter.cross_over_ratio
+    for particle in @particles.particles
+      particle.cross_over = Math.random() < @parameter.cross_over_ratio
 
-  selection: => 
-    @particles.for_each (particle, particles) ->
+  selection: =>
+    for particle in @particles.particles
       if particle.cross_over and particle.child.dominates(particle)
-        particles.parameter.on_particle_death(particle)
+        @parameter.on_particle_death(particle)
         particle.parameter_value = particle.child.parameter_value
         particle.objective_value = particle.child.objective_value
-        particles.parameter.on_particle_creation(particle)
-        particles.check_best_particle(particle)
+        @parameter.on_particle_creation(particle)
+        @particles.check_best_particle(particle)
 
   termination: =>
     best = @particles.current_best_particle
@@ -256,7 +251,7 @@ Particle::to_string = ->
   parameter_value = "("
   for dimension_value in @parameter_value
      parameter_value += dimension_value + ", "
-  parameter_value += ")" 
+  parameter_value += ")"
   "parameter value: " + parameter_value + ", objective value: " + @objective_value
 
 
@@ -381,7 +376,7 @@ Particle::to_string = ->
           z_scaling = z_scaling * factor
           scale_lines factor
           return
-        if axis is "space"
+        if axis is "r"
           run_evolution scene
           return
         if axis is 'm' # go no minimum
@@ -414,7 +409,7 @@ Particle::to_string = ->
           68: "d"
           85: "u"
           73: "i"
-          32: 'space'
+          82: 'r'
           77: 'm'
         configure_camera scene.getCamera(), key_mapping[event.keyCode]
         p = camera.getPosition()
@@ -437,7 +432,6 @@ Particle::to_string = ->
       x = undefined
       y = undefined
       z = undefined
-      _results = undefined
       clear_lines scene
       lines = []
       add_axis scene, "x", axis_length
@@ -447,7 +441,6 @@ Particle::to_string = ->
       color2 = [0, 0, 1]
       xmin = parameter.search_space[0].min
       xmax = parameter.search_space[0].max
-
       search_space2 = parameter.search_space[1] or (min: 0, max:0)
       ymin = search_space2.min
       ymax = search_space2.max
@@ -457,7 +450,6 @@ Particle::to_string = ->
       xs = (xmax-xmin)/s
       ys = (ymax-ymin)/s
       y = ymin
-      _results = []
       min = {}
       min.z = undefined
       while y <= ymax
@@ -476,7 +468,6 @@ Particle::to_string = ->
           x = x + xs
         y = y + ys
       $("#termination_display").html "min: #{min.x}|#{min.z}|#{min.y}"
-      _results
 
     clear_lines = (scene) ->
       for line in lines
@@ -488,20 +479,18 @@ Particle::to_string = ->
 
     scale_line = (line, factor) ->
       coordinates = line.getCoordinates()
-      z = coordinates[4]	
+      z = coordinates[4]
       z *= factor
       point1 = [coordinates[0], coordinates[1], coordinates[2]]
       point2 = [coordinates[3], z, coordinates[5]]
       line.setCoordinates(point1, point2)
 
     addLine = (scene, point1, point2, color, color2, width) ->
-      line = undefined
-      line = undefined
       color2 = color  unless color2
       line = new c3dl.Line()
       line.setCoordinates point1, point2
       line.setColors color, color2
-      line.setWidth (width or 1) 
+      line.setWidth (width or 1)
       lines.push line
       scene.addObjectToScene line
       line
@@ -552,13 +541,14 @@ Particle::to_string = ->
     run_evolution = (scene) ->
       clear_lines scene
       best_marker = undefined
-      parameter = parameter1 # PARAMETER SELECTION
+      parameter = parameter9 # PARAMETER SELECTION
       $('#objective_name').html(parameter.objective_name)
       $('#number_of_particles').html(parameter.number_of_particles)
       $('#number_of_iterations').html(parameter.number_of_iterations)
       $('#objective').html(parameter.objective.toString())
-    #  for search_space in parameter.search_space
-    #    $('#search_space').append('<li>').append('min: ' + search_space.min + ' max: ' + search_space.max)
+      $('#search_space').html('')
+      for search_space in parameter.search_space
+        $('#search_space').append('<li>').append('min: ' + search_space.min + ' max: ' + search_space.max)
       parameter.scene = scene
       parameter.on_particle_creation = (particle) ->
         add_particle_line(parameter.scene, particle)

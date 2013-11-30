@@ -25,9 +25,9 @@
 
   parameter1.number_of_dimensions = 2;
 
-  parameter1.number_of_particles = 64;
+  parameter1.number_of_particles = 256;
 
-  parameter1.number_of_iterations = 200;
+  parameter1.number_of_iterations = 500;
 
   parameter2 = {};
 
@@ -263,12 +263,14 @@
     }
 
     ParticleStorage.prototype.shuffle = function() {
-      var _j, _ref, _results;
+      var shuffling_i, _results;
       this.particles = new Array();
       this.current_best_particle = null;
+      shuffling_i = 0;
       _results = [];
-      for (i = _j = 1, _ref = this.parameter.number_of_particles; 1 <= _ref ? _j < _ref : _j > _ref; i = 1 <= _ref ? ++_j : --_j) {
-        _results.push(this.add_random_particle());
+      while (shuffling_i < this.parameter.number_of_particles) {
+        this.add_random_particle();
+        _results.push(shuffling_i++);
       }
       return _results;
     };
@@ -290,29 +292,29 @@
     };
 
     ParticleStorage.prototype.check_parameter_value_in_search_space = function(parameter_value) {
-      var dimension_value, search_space;
-      i = 0;
-      while (i < parameter_value.length) {
-        dimension_value = parameter_value[i];
-        search_space = this.parameter.search_space[i];
+      var dimension_value, parameter_i, search_space;
+      parameter_i = 0;
+      while (parameter_i < parameter_value.length) {
+        dimension_value = parameter_value[parameter_i];
+        search_space = this.parameter.search_space[parameter_i];
         if (dimension_value < search_space.min || dimension_value > search_space.max) {
           return this.create_random_parameter_value();
         }
-        i++;
+        parameter_i++;
       }
       return parameter_value;
     };
 
     ParticleStorage.prototype.create_random_parameter_value = function() {
-      var parameter_value, parameter_value_xi, search_space, width, xi;
+      var parameter_value, parameter_value_xi, ri, search_space, width;
       parameter_value = new Array();
-      xi = 0;
-      while (xi < this.parameter.number_of_dimensions) {
-        search_space = this.parameter.search_space[xi];
+      ri = 0;
+      while (ri < this.parameter.number_of_dimensions) {
+        search_space = this.parameter.search_space[ri];
         width = search_space.max - search_space.min;
         parameter_value_xi = search_space.min + width * Math.random();
         parameter_value.push(parameter_value_xi);
-        xi++;
+        ri++;
       }
       return parameter_value;
     };
@@ -328,18 +330,6 @@
       var index;
       index = Math.round(Math.random() * (this.particles.length - 1));
       return this.particles[index];
-    };
-
-    ParticleStorage.prototype.for_each = function(particle_action) {
-      var particle, _results;
-      i = 0;
-      _results = [];
-      while (i < this.particles.length) {
-        particle = this.particles[i];
-        particle_action(particle, this);
-        _results.push(i++);
-      }
-      return _results;
     };
 
     return ParticleStorage;
@@ -372,6 +362,7 @@
       this.termination = __bind(this.termination, this);
       this.selection = __bind(this.selection, this);
       this.recombination = __bind(this.recombination, this);
+      this.mutation = __bind(this.mutation, this);
       this.initialize = __bind(this.initialize, this);
       this.run = __bind(this.run, this);
       this.parameter = parameter || {};
@@ -415,7 +406,7 @@
     };
 
     differential_evolution.prototype.mutation = function() {
-      var particle_mutation;
+      var best, child_objective_value, child_parameter_value, particle, particle_mutation, random1, random2, _j, _len, _ref, _results;
       particle_mutation = function(parameter, current, random1, random2, best) {
         var child, child_xi, xi;
         child = new Array();
@@ -427,34 +418,49 @@
         }
         return child;
       };
-      return this.particles.for_each(function(particle, particles) {
-        var best, child_objective_value, child_parameter_value, random1, random2;
-        random1 = particles.pick_random_particle();
-        random2 = particles.pick_random_particle();
-        best = particles.current_best_particle;
-        child_parameter_value = particle_mutation(particles.parameter, particle.parameter_value, random1.parameter_value, random2.parameter_value, best.parameter_value);
-        child_parameter_value = particles.check_parameter_value_in_search_space(child_parameter_value);
-        child_objective_value = particles.parameter.objective(child_parameter_value);
-        return particle.child = new Particle(child_parameter_value, child_objective_value);
-      });
+      _ref = this.particles.particles;
+      _results = [];
+      for (_j = 0, _len = _ref.length; _j < _len; _j++) {
+        particle = _ref[_j];
+        random1 = this.particles.pick_random_particle();
+        random2 = this.particles.pick_random_particle();
+        best = this.particles.current_best_particle;
+        child_parameter_value = particle_mutation(this.parameter, particle.parameter_value, random1.parameter_value, random2.parameter_value, best.parameter_value);
+        child_parameter_value = this.particles.check_parameter_value_in_search_space(child_parameter_value);
+        child_objective_value = this.parameter.objective(child_parameter_value);
+        _results.push(particle.child = new Particle(child_parameter_value, child_objective_value));
+      }
+      return _results;
     };
 
     differential_evolution.prototype.recombination = function() {
-      return this.particles.for_each(function(particle, particles) {
-        return particle.cross_over = Math.random() < particles.parameter.cross_over_ratio;
-      });
+      var particle, _j, _len, _ref, _results;
+      _ref = this.particles.particles;
+      _results = [];
+      for (_j = 0, _len = _ref.length; _j < _len; _j++) {
+        particle = _ref[_j];
+        _results.push(particle.cross_over = Math.random() < this.parameter.cross_over_ratio);
+      }
+      return _results;
     };
 
     differential_evolution.prototype.selection = function() {
-      return this.particles.for_each(function(particle, particles) {
+      var particle, _j, _len, _ref, _results;
+      _ref = this.particles.particles;
+      _results = [];
+      for (_j = 0, _len = _ref.length; _j < _len; _j++) {
+        particle = _ref[_j];
         if (particle.cross_over && particle.child.dominates(particle)) {
-          particles.parameter.on_particle_death(particle);
+          this.parameter.on_particle_death(particle);
           particle.parameter_value = particle.child.parameter_value;
           particle.objective_value = particle.child.objective_value;
-          particles.parameter.on_particle_creation(particle);
-          return particles.check_best_particle(particle);
+          this.parameter.on_particle_creation(particle);
+          _results.push(this.particles.check_best_particle(particle));
+        } else {
+          _results.push(void 0);
         }
-      });
+      }
+      return _results;
     };
 
     differential_evolution.prototype.termination = function() {
@@ -612,7 +618,7 @@
             scale_lines(factor);
             return;
           }
-          if (axis === "space") {
+          if (axis === "r") {
             run_evolution(scene);
             return;
           }
@@ -652,7 +658,7 @@
             68: "d",
             85: "u",
             73: "i",
-            32: 'space',
+            82: 'r',
             77: 'm'
           };
           configure_camera(scene.getCamera(), key_mapping[event.keyCode]);
@@ -667,7 +673,7 @@
         return scene.startScene();
       };
       drawMeshgrid = function(scene) {
-        var X, color1, color2, h, min, point1, point2, s, search_space2, x, xh, xmax, xmin, xs, y, yh, ymax, ymin, ys, z, _results;
+        var X, color1, color2, h, min, point1, point2, s, search_space2, x, xh, xmax, xmin, xs, y, yh, ymax, ymin, ys, z;
         color1 = void 0;
         color2 = void 0;
         h = void 0;
@@ -678,7 +684,6 @@
         x = void 0;
         y = void 0;
         z = void 0;
-        _results = void 0;
         clear_lines(scene);
         lines = [];
         add_axis(scene, "x", axis_length);
@@ -700,7 +705,6 @@
         xs = (xmax - xmin) / s;
         ys = (ymax - ymin) / s;
         y = ymin;
-        _results = [];
         min = {};
         min.z = void 0;
         while (y <= ymax) {
@@ -721,8 +725,7 @@
           }
           y = y + ys;
         }
-        $("#termination_display").html("min: " + min.x + "|" + min.z + "|" + min.y);
-        return _results;
+        return $("#termination_display").html("min: " + min.x + "|" + min.z + "|" + min.y);
       };
       clear_lines = function(scene) {
         var line, _j, _len, _results;
@@ -753,8 +756,6 @@
       };
       addLine = function(scene, point1, point2, color, color2, width) {
         var line;
-        line = void 0;
-        line = void 0;
         if (!color2) {
           color2 = color;
         }
@@ -811,14 +812,20 @@
         }
       };
       run_evolution = function(scene) {
-        var algorithm;
+        var algorithm, search_space, _j, _len, _ref;
         clear_lines(scene);
         best_marker = void 0;
-        parameter = parameter1;
+        parameter = parameter9;
         $('#objective_name').html(parameter.objective_name);
         $('#number_of_particles').html(parameter.number_of_particles);
         $('#number_of_iterations').html(parameter.number_of_iterations);
         $('#objective').html(parameter.objective.toString());
+        $('#search_space').html('');
+        _ref = parameter.search_space;
+        for (_j = 0, _len = _ref.length; _j < _len; _j++) {
+          search_space = _ref[_j];
+          $('#search_space').append('<li>').append('min: ' + search_space.min + ' max: ' + search_space.max);
+        }
         parameter.scene = scene;
         parameter.on_particle_creation = function(particle) {
           return add_particle_line(parameter.scene, particle);

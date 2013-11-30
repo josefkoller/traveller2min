@@ -8,8 +8,8 @@ parameter1.objective = (X) ->
   square(1.5 - x + x * y) + square(2.25 - x + x * y * y) + square(2.625 - x + x * y * y * y)
 parameter1.search_space = [(min: -4.5, max: 4.5),(min: -4.5, max: 4.5)]
 parameter1.number_of_dimensions = 2
-parameter1.number_of_particles = 256 
-parameter1.number_of_iterations = 500
+parameter1.number_of_particles = 64 
+parameter1.number_of_iterations = 100
 
 parameter2 = {}
 parameter2.objective_name = 'rosenbrock'
@@ -96,7 +96,7 @@ parameter9.objective = (X) ->
     z += x*x*x*x - 16*x*x + 5*x
   z*0.5
 parameter9.search_space = []
-for i in [1..2]
+for i in [1..20]
   parameter9.search_space.push(min: -5, max: 5)
 parameter9.number_of_dimensions = parameter9.search_space.length
 parameter9.number_of_particles = 64 
@@ -448,7 +448,9 @@ Particle::to_string = ->
       yh = ymax - ymin
       s = 20
       xs = (xmax-xmin)/s
-      ys = (ymax-ymin)/s
+      ys = 1
+      if ymax > ymin
+        ys = (ymax-ymin)/s
       y = ymin
       min = {}
       min.z = undefined

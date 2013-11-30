@@ -25,9 +25,9 @@
 
   parameter1.number_of_dimensions = 2;
 
-  parameter1.number_of_particles = 256;
+  parameter1.number_of_particles = 64;
 
-  parameter1.number_of_iterations = 500;
+  parameter1.number_of_iterations = 100;
 
   parameter2 = {};
 
@@ -234,7 +234,7 @@
 
   parameter9.search_space = [];
 
-  for (i = _i = 1; _i <= 2; i = ++_i) {
+  for (i = _i = 1; _i <= 20; i = ++_i) {
     parameter9.search_space.push({
       min: -5,
       max: 5
@@ -703,7 +703,10 @@
         yh = ymax - ymin;
         s = 20;
         xs = (xmax - xmin) / s;
-        ys = (ymax - ymin) / s;
+        ys = 1;
+        if (ymax > ymin) {
+          ys = (ymax - ymin) / s;
+        }
         y = ymin;
         min = {};
         min.z = void 0;

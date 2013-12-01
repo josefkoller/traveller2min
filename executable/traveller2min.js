@@ -243,9 +243,9 @@
 
   parameter9.number_of_dimensions = parameter9.search_space.length;
 
-  parameter9.number_of_particles = 64;
+  parameter9.number_of_particles = 2000;
 
-  parameter9.number_of_iterations = 100;
+  parameter9.number_of_iterations = 200;
 
   Particle = (function() {
     function Particle(parameter_value, objective_value) {
@@ -828,7 +828,7 @@
         var algorithm, element, search_space, _j, _len, _ref;
         clear_lines(scene);
         best_marker = void 0;
-        parameter = parameter6;
+        parameter = parameter5;
         $('#objective_name').html(parameter.objective_name);
         $('#number_of_particles').html(parameter.number_of_particles);
         $('#number_of_iterations').html(parameter.number_of_iterations);

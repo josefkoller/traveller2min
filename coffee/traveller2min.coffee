@@ -99,8 +99,8 @@ parameter9.search_space = []
 for i in [1..20]
   parameter9.search_space.push(min: -5, max: 5)
 parameter9.number_of_dimensions = parameter9.search_space.length
-parameter9.number_of_particles = 64 
-parameter9.number_of_iterations = 100
+parameter9.number_of_particles = 2000
+parameter9.number_of_iterations = 200
 
 
 # Particle class...
@@ -549,7 +549,7 @@ Particle::to_string = ->
     run_evolution = (scene) ->
       clear_lines scene
       best_marker = undefined
-      parameter = parameter6 # PARAMETER SELECTION
+      parameter = parameter5 # PARAMETER SELECTION
       $('#objective_name').html(parameter.objective_name)
       $('#number_of_particles').html(parameter.number_of_particles)
       $('#number_of_iterations').html(parameter.number_of_iterations)
@@ -573,4 +573,3 @@ Particle::to_string = ->
     c3dl.addMainCallBack traveller_main, "traveller_canvas"
   ).call this
 ).call this
-

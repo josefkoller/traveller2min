@@ -8,30 +8,98 @@
   <script src='jquery_min.js'></script>
   <script type="application/javascript" src="../canvas3dapi/c3dapi.js" ></script>
   <script type="application/javascript" src="traveller2min.js"></script>
+
+  <style type="text/css">
+    body {
+      font-family: verdana;
+      font-size: 1.1em;
+      font-weight: bold;
+    }
+    table {
+
+      border-collapse: separate;
+      border-spacing: 1em;
+    }
+    table tr td {
+      vertical-align: top;
+      border: 3px solid magenta;
+      padding: 0px;
+      padding-right: 3px;
+    }
+
+    .header {
+      font-size: 1.2em;
+      padding-top: 0.2em;
+      padding-bottom: 0.05em;
+      padding-left: 0.2em;
+      text-transform: uppercase;
+      width: 100%;
+      background: magenta;
+      margin-right: 0px;
+    }
+  </style>
  </head>
  <body>
    <canvas id="traveller_canvas" style="border: 2px solid" width="1200" height="600"></canvas>
-   <div>
-    control: w,a,s,d,
-  </div>
-  <div id="traveller_display">
-  </div>
-  <div id="termination_display">
-  </div>
-  Number of Particles/Generation:<D-r>
-  <div id="number_of_particles">
-  </div>
-  Number of Iterations:
-  <div id="number_of_iterations">
-  </div>
-  <div id="objective_name">
-  </div>
-  <pre id="objective">
-  </pre>
-  Search Space:
-  <ul id="search_space">
-  </ul>
+   <table>
+     <tr>
+       <td>
+          <div class="header">Results</div>
+          <div id="meshgrid_display"></div>
+          <div id="termination_display"></div>
+       </td>
+       <td>
+         <div class='header'>Current Iteration</div>
+          <div id="iteration_display">
+          </div>
+       </td>
+     </tr>
+     <tr>
+       <td>
+        <div class='header'>Initialization Parameters</div>
+        Number of Particles/Generation:
+        <div id="number_of_particles">
+        </div>
+        Number of Iterations:
+        <div id="number_of_iterations">
+        </div>
+        <div id="objective_name">
+        </div>
+        <pre id="objective">
+        </pre>
+        Search Space:
+        <ul id="search_space">
+        </ul>
+       </td>
+       <td>
+          <div class="header">Camera</div>
+          <div id="camera_display">
+          </div>
+        </td>
+      </tr>
+
+     <tr>
+       <td>
+         <div class='header'>Legend</div>
+         <ul id="legend">
+           <li>green-blue-red-orthogonal lines: coordinate system, green is the dimension for the single objective values</li>
+           <li>lines red-to-blue: meshgrid of the function (do not look at these lines!)</li>
+           <li>lines yellow-to-blue: the current particle generation, these values are inverted using z=4-z</li>
+           <li>red line: marker for the currently best particle</li>
+         </ul>
+       </td>
+       <td>
+         <div class='header'>Control</div>
+         <ul id="control_info">
+           <li>run algorithm: press 'r'</li>
+           <li>move camera: press 'w','a','s' or 'd'</li>
+           <li>look to minimum: press 'm'</li>
+           <li>scale objective_values: press 'u' (double), 'i' (half). current generation objectives are transformed by z=4-z</li>
+        </ul>
+       </td>
+     </tr>
+        </table>
 
 
- </body>
+</body>
 </html>

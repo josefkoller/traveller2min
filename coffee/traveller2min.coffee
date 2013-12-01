@@ -1,5 +1,9 @@
 # differential evolution algorithm
 
+ITERATION_SLEEP = 1/40 * 1000 # milliseconds
+DISPLAY_ITERATION_INFO = true
+SHOW_DEATH_PARTICLE = false
+
 parameter1 = {}
 parameter1.objective_name = 'beales'
 parameter1.objective = (X) ->
@@ -9,7 +13,7 @@ parameter1.objective = (X) ->
 parameter1.search_space = [(min: -4.5, max: 4.5),(min: -4.5, max: 4.5)]
 parameter1.number_of_dimensions = 2
 parameter1.number_of_particles = 64 
-parameter1.number_of_iterations = 100
+parameter1.number_of_iterations = 30
 
 parameter2 = {}
 parameter2.objective_name = 'rosenbrock'
@@ -20,7 +24,7 @@ parameter2.objective = (X) ->
 parameter2.search_space = [(min: -0.5, max: 3),(min: -1.5, max: 2.0)]
 parameter2.number_of_dimensions = 2
 parameter2.number_of_particles = 64
-parameter2.number_of_iterations = 200
+parameter2.number_of_iterations = 50
 
 parameter3 = {}
 parameter3.objective_name = 'goldstein-price'
@@ -31,7 +35,7 @@ parameter3.objective = (X) ->
 parameter3.search_space = [(min: -1.5, max: 1.5),(min: -1.5, max: 1.5)]
 parameter3.number_of_dimensions = 2
 parameter3.number_of_particles = 64
-parameter2.number_of_iterations = 200
+parameter3.number_of_iterations = 200
 
 parameter4 = {}
 parameter4.objective_name = 'bukin function n. 6'
@@ -190,16 +194,19 @@ class differential_evolution
     @parameter.cross_over_ratio = parameter.cross_over_ratio or 0.8
 
   run: =>
+    $('#termination_display').html "running..."
     @initialize()
     @iteration()
 
   iteration: () ->
+    if DISPLAY_ITERATION_INFO
+      $('#iteration_display').html "<br/>iteration: #{@current_iteration}/#{@parameter.number_of_iterations}"
     @mutation()
     @recombination()
     @selection()
     that = this
     if(@start_iteration())
-      window.setTimeout((() -> that.iteration()), 10)
+      window.setTimeout((() -> that.iteration()), ITERATION_SLEEP)
     else
       @termination()
 
@@ -210,6 +217,7 @@ class differential_evolution
 
   start_iteration: () ->
     return false  if @current_iteration is @parameter.number_of_iterations
+    @iteration_progress = @current_iteration / @parameter.number_of_iterations
     @current_iteration++
     true
 
@@ -236,17 +244,21 @@ class differential_evolution
       particle.cross_over = Math.random() < @parameter.cross_over_ratio
 
   selection: =>
+    child_wins = 0
     for particle in @particles.particles
       if particle.cross_over and particle.child.dominates(particle)
-        @parameter.on_particle_death(particle)
+        child_wins++
+        @parameter.on_particle_death(particle, @iteration_progress)
         particle.parameter_value = particle.child.parameter_value
         particle.objective_value = particle.child.objective_value
         @parameter.on_particle_creation(particle)
         @particles.check_best_particle(particle)
+    if DISPLAY_ITERATION_INFO
+      $('#iteration_display').append "<br/>#{child_wins}/#{@particles.particles.length} wins"
 
   termination: =>
     best = @particles.current_best_particle
-    text = "Best particle at termination: " + best.to_string()
+    text = "FINISHED!<br/>Best particle at termination:<br/>" + best.to_string()
     $("#termination_display").html text
 
 Particle::dominates = (other) ->
@@ -254,15 +266,16 @@ Particle::dominates = (other) ->
 
 
 Particle::to_string = ->
+  display_float = (float) ->
+     if float < 0.0000001
+       0
+     float
   parameter_value = "("
   for dimension_value in @parameter_value
-     parameter_value += dimension_value + ", "
+     parameter_value += display_float(dimension_value) + ", "
   parameter_value += ")"
-  "parameter value: " + parameter_value + ", objective value: " + @objective_value
-
-
-
-
+  objective_value = display_float @objective_value
+  "parameter value: " + parameter_value + "<br/>objective value: " + objective_value
 
 
 
@@ -291,7 +304,6 @@ Particle::to_string = ->
     traveller_main = undefined
     vector_on_axis = undefined
     z_scaling = undefined
-    addLine = undefined
     addVectors = undefined
     square = undefined
     traveller_main = undefined
@@ -418,14 +430,26 @@ Particle::to_string = ->
           82: 'r'
           77: 'm'
         configure_camera scene.getCamera(), key_mapping[event.keyCode]
-        p = camera.getPosition()
-        d = camera.getDir()
-        text = "pos: (" + p[0] + "," + p[1] + "," + p[2] + "); " + "dir:  (" + d[0] + "," + d[1] + "," + d[2] + ")"
-        $("#traveller_display").html text
+        float_presenter = (float) -> float.toFixed(3)
+        vector_presenter = (vector) -> "#{float_presenter(vector[0])}|#{float_presenter(vector[1])}|#{float_presenter(vector[2])}"
+        text = "position: #{vector_presenter(camera.getPosition())}<br/> direction: #{vector_presenter(camera.getDir())}"
+        $("#camera_display").html text
         false
       camera.setPosition [10, 3, -8]
       camera.setLookAtPoint [0, 0, 0]
       scene.startScene()
+      scene.setPickingCallback on_scene_object_picking
+      scene.setPickingPrecision c3dl.PICK_PRECISION_BOUNDING_VOLUME
+
+    on_scene_object_picking = (picking_result) ->
+      picked_objects = picking_result.getObjects()
+      used_button = picking_result.getButtonUsed()
+      for picked_object in picked_objects
+        if used_button == 1
+          coordinates = picked_object.getCoordinates()
+          if coordinates
+            alert(coordinates[1])
+
 
     drawMeshgrid = (scene) ->
       color1 = undefined
@@ -475,7 +499,8 @@ Particle::to_string = ->
           addLine scene, point1, point2, color1, color2
           x = x + xs
         y = y + ys
-      $("#termination_display").html "min: #{min.x}|#{min.z}|#{min.y}"
+
+      $("#meshgrid_display").html "min by meshgrid: #{min.x}|#{min.z}|#{min.y}"
 
     clear_lines = (scene) ->
       for line in lines
@@ -508,7 +533,7 @@ Particle::to_string = ->
 
     generation_color1 = [0.8, 0.9, 0]
     generation_color2 = [0, 0.2, 0.8]
-    generation_width = 2
+    generation_width = 1
     death_color1 = [0.2, 0.3, 0]
     death_color2 = [0, 0.6, 0.3]
     death_width = 1
@@ -526,15 +551,16 @@ Particle::to_string = ->
       line = addLine scene, point1, point2, generation_color1, generation_color2, generation_width
       particle.line = line
 
-    kill_particle_line = (scene, particle) ->
-      particle.line.setColors(death_color1, death_color2)
-      particle.line.setWidth(death_width)
+    kill_particle_line = (scene, particle, iteration_progress) ->
+      color1 = [0,0,0]
+      c = 255 * iteration_progress
+      color2 = [c,c,c]
+      particle.line.setColors color1, color2
+      particle.line.setWidth death_width
       scale_line particle.line, 0.5
-      scene.removeObjectFromScene(particle.line)
+      unless SHOW_DEATH_PARTICLE
+        scene.removeObjectFromScene(particle.line)
       particle.line = null
-      #x = 2
-      #for i in [1..1000000]
-      #  x = Math.sqrt(x)
 
     best_particle_changes = (scene, particle) ->
       return unless particle.line
@@ -549,7 +575,7 @@ Particle::to_string = ->
     run_evolution = (scene) ->
       clear_lines scene
       best_marker = undefined
-      parameter = parameter5 # PARAMETER SELECTION
+      parameter = parameter2 # PARAMETER SELECTION
       $('#objective_name').html(parameter.objective_name)
       $('#number_of_particles').html(parameter.number_of_particles)
       $('#number_of_iterations').html(parameter.number_of_iterations)
@@ -564,8 +590,8 @@ Particle::to_string = ->
         add_particle_line(parameter.scene, particle)
       parameter.on_best_particle_changes = (particle) ->
         best_particle_changes(parameter.scene, particle)
-      parameter.on_particle_death = (particle) ->
-        kill_particle_line(parameter.scene, particle)
+      parameter.on_particle_death = (particle,iteration_progress) ->
+        kill_particle_line(parameter.scene, particle, iteration_progress)
       drawMeshgrid scene
       algorithm =new differential_evolution(parameter)
       algorithm.run()

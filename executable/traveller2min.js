@@ -1,6 +1,12 @@
 (function() {
-  var Particle, ParticleStorage, differential_evolution, i, objective1, objective2, parameter1, parameter2, parameter3, parameter4, parameter5, parameter6, parameter7, parameter8, parameter9, run, square, _i,
+  var DISPLAY_ITERATION_INFO, ITERATION_SLEEP, Particle, ParticleStorage, SHOW_DEATH_PARTICLE, differential_evolution, i, objective1, objective2, parameter1, parameter2, parameter3, parameter4, parameter5, parameter6, parameter7, parameter8, parameter9, run, square, _i,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
+
+  ITERATION_SLEEP = 1 / 40 * 1000;
+
+  DISPLAY_ITERATION_INFO = true;
+
+  SHOW_DEATH_PARTICLE = false;
 
   parameter1 = {};
 
@@ -27,7 +33,7 @@
 
   parameter1.number_of_particles = 64;
 
-  parameter1.number_of_iterations = 100;
+  parameter1.number_of_iterations = 30;
 
   parameter2 = {};
 
@@ -54,7 +60,7 @@
 
   parameter2.number_of_particles = 64;
 
-  parameter2.number_of_iterations = 200;
+  parameter2.number_of_iterations = 50;
 
   parameter3 = {};
 
@@ -81,7 +87,7 @@
 
   parameter3.number_of_particles = 64;
 
-  parameter2.number_of_iterations = 200;
+  parameter3.number_of_iterations = 200;
 
   parameter4 = {};
 
@@ -382,12 +388,16 @@
     }
 
     differential_evolution.prototype.run = function() {
+      $('#termination_display').html("running...");
       this.initialize();
       return this.iteration();
     };
 
     differential_evolution.prototype.iteration = function() {
       var that;
+      if (DISPLAY_ITERATION_INFO) {
+        $('#iteration_display').html("<br/>iteration: " + this.current_iteration + "/" + this.parameter.number_of_iterations);
+      }
       this.mutation();
       this.recombination();
       this.selection();
@@ -395,7 +405,7 @@
       if (this.start_iteration()) {
         return window.setTimeout((function() {
           return that.iteration();
-        }), 10);
+        }), ITERATION_SLEEP);
       } else {
         return this.termination();
       }
@@ -411,6 +421,7 @@
       if (this.current_iteration === this.parameter.number_of_iterations) {
         return false;
       }
+      this.iteration_progress = this.current_iteration / this.parameter.number_of_iterations;
       this.current_iteration++;
       return true;
     };
@@ -455,28 +466,29 @@
     };
 
     differential_evolution.prototype.selection = function() {
-      var particle, _j, _len, _ref, _results;
+      var child_wins, particle, _j, _len, _ref;
+      child_wins = 0;
       _ref = this.particles.particles;
-      _results = [];
       for (_j = 0, _len = _ref.length; _j < _len; _j++) {
         particle = _ref[_j];
         if (particle.cross_over && particle.child.dominates(particle)) {
-          this.parameter.on_particle_death(particle);
+          child_wins++;
+          this.parameter.on_particle_death(particle, this.iteration_progress);
           particle.parameter_value = particle.child.parameter_value;
           particle.objective_value = particle.child.objective_value;
           this.parameter.on_particle_creation(particle);
-          _results.push(this.particles.check_best_particle(particle));
-        } else {
-          _results.push(void 0);
+          this.particles.check_best_particle(particle);
         }
       }
-      return _results;
+      if (DISPLAY_ITERATION_INFO) {
+        return $('#iteration_display').append("<br/>" + child_wins + "/" + this.particles.particles.length + " wins");
+      }
     };
 
     differential_evolution.prototype.termination = function() {
       var best, text;
       best = this.particles.current_best_particle;
-      text = "Best particle at termination: " + best.to_string();
+      text = "FINISHED!<br/>Best particle at termination:<br/>" + best.to_string();
       return $("#termination_display").html(text);
     };
 
@@ -489,20 +501,27 @@
   };
 
   Particle.prototype.to_string = function() {
-    var dimension_value, parameter_value, _j, _len, _ref;
+    var dimension_value, display_float, objective_value, parameter_value, _j, _len, _ref;
+    display_float = function(float) {
+      if (float < 0.0000001) {
+        0;
+      }
+      return float;
+    };
     parameter_value = "(";
     _ref = this.parameter_value;
     for (_j = 0, _len = _ref.length; _j < _len; _j++) {
       dimension_value = _ref[_j];
-      parameter_value += dimension_value + ", ";
+      parameter_value += display_float(dimension_value) + ", ";
     }
     parameter_value += ")";
-    return "parameter value: " + parameter_value + ", objective value: " + this.objective_value;
+    objective_value = display_float(this.objective_value);
+    return "parameter value: " + parameter_value + "<br/>objective value: " + objective_value;
   };
 
   (function() {
     return (function() {
-      var addLine, addVectors, add_axis, add_particle_line, axis_length, best_color1, best_color2, best_marker, best_particle_changes, best_width, clear_lines, death_color1, death_color2, death_width, drawMeshgrid, generation_color1, generation_color2, generation_width, kill_particle_line, lines, parameter, run_evolution, scale_line, scale_lines, scene, traveller_main, vector_on_axis, z_scaling;
+      var addLine, addVectors, add_axis, add_particle_line, axis_length, best_color1, best_color2, best_marker, best_particle_changes, best_width, clear_lines, death_color1, death_color2, death_width, drawMeshgrid, generation_color1, generation_color2, generation_width, kill_particle_line, lines, on_scene_object_picking, parameter, run_evolution, scale_line, scale_lines, scene, traveller_main, vector_on_axis, z_scaling;
       addLine = void 0;
       addVectors = void 0;
       add_axis = void 0;
@@ -518,7 +537,6 @@
       traveller_main = void 0;
       vector_on_axis = void 0;
       z_scaling = void 0;
-      addLine = void 0;
       addVectors = void 0;
       square = void 0;
       traveller_main = void 0;
@@ -652,7 +670,7 @@
         };
         configure_camera(camera, "z");
         scene.setKeyboardCallback(function(event) {
-          var d, key_mapping, p, text;
+          var d, float_presenter, key_mapping, p, text, vector_presenter;
           d = void 0;
           key_mapping = void 0;
           p = void 0;
@@ -672,15 +690,41 @@
             77: 'm'
           };
           configure_camera(scene.getCamera(), key_mapping[event.keyCode]);
-          p = camera.getPosition();
-          d = camera.getDir();
-          text = "pos: (" + p[0] + "," + p[1] + "," + p[2] + "); " + "dir:  (" + d[0] + "," + d[1] + "," + d[2] + ")";
-          $("#traveller_display").html(text);
+          float_presenter = function(float) {
+            return float.toFixed(3);
+          };
+          vector_presenter = function(vector) {
+            return "" + (float_presenter(vector[0])) + "|" + (float_presenter(vector[1])) + "|" + (float_presenter(vector[2]));
+          };
+          text = "position: " + (vector_presenter(camera.getPosition())) + "<br/> direction: " + (vector_presenter(camera.getDir()));
+          $("#camera_display").html(text);
           return false;
         });
         camera.setPosition([10, 3, -8]);
         camera.setLookAtPoint([0, 0, 0]);
-        return scene.startScene();
+        scene.startScene();
+        scene.setPickingCallback(on_scene_object_picking);
+        return scene.setPickingPrecision(c3dl.PICK_PRECISION_BOUNDING_VOLUME);
+      };
+      on_scene_object_picking = function(picking_result) {
+        var coordinates, picked_object, picked_objects, used_button, _j, _len, _results;
+        picked_objects = picking_result.getObjects();
+        used_button = picking_result.getButtonUsed();
+        _results = [];
+        for (_j = 0, _len = picked_objects.length; _j < _len; _j++) {
+          picked_object = picked_objects[_j];
+          if (used_button === 1) {
+            coordinates = picked_object.getCoordinates();
+            if (coordinates) {
+              _results.push(alert(coordinates[1]));
+            } else {
+              _results.push(void 0);
+            }
+          } else {
+            _results.push(void 0);
+          }
+        }
+        return _results;
       };
       drawMeshgrid = function(scene) {
         var X, color1, color2, h, min, point1, point2, s, search_space2, x, xh, xmax, xmin, xs, y, yh, ymax, ymin, ys, z;
@@ -738,7 +782,7 @@
           }
           y = y + ys;
         }
-        return $("#termination_display").html("min: " + min.x + "|" + min.z + "|" + min.y);
+        return $("#meshgrid_display").html("min by meshgrid: " + min.x + "|" + min.z + "|" + min.y);
       };
       clear_lines = function(scene) {
         var line, _j, _len, _results;
@@ -785,7 +829,7 @@
       };
       generation_color1 = [0.8, 0.9, 0];
       generation_color2 = [0, 0.2, 0.8];
-      generation_width = 2;
+      generation_width = 1;
       death_color1 = [0.2, 0.3, 0];
       death_color2 = [0, 0.6, 0.3];
       death_width = 1;
@@ -803,11 +847,17 @@
         line = addLine(scene, point1, point2, generation_color1, generation_color2, generation_width);
         return particle.line = line;
       };
-      kill_particle_line = function(scene, particle) {
-        particle.line.setColors(death_color1, death_color2);
+      kill_particle_line = function(scene, particle, iteration_progress) {
+        var c, color1, color2;
+        color1 = [0, 0, 0];
+        c = 255 * iteration_progress;
+        color2 = [c, c, c];
+        particle.line.setColors(color1, color2);
         particle.line.setWidth(death_width);
         scale_line(particle.line, 0.5);
-        scene.removeObjectFromScene(particle.line);
+        if (!SHOW_DEATH_PARTICLE) {
+          scene.removeObjectFromScene(particle.line);
+        }
         return particle.line = null;
       };
       best_particle_changes = function(scene, particle) {
@@ -828,7 +878,7 @@
         var algorithm, element, search_space, _j, _len, _ref;
         clear_lines(scene);
         best_marker = void 0;
-        parameter = parameter5;
+        parameter = parameter2;
         $('#objective_name').html(parameter.objective_name);
         $('#number_of_particles').html(parameter.number_of_particles);
         $('#number_of_iterations').html(parameter.number_of_iterations);
@@ -848,8 +898,8 @@
         parameter.on_best_particle_changes = function(particle) {
           return best_particle_changes(parameter.scene, particle);
         };
-        parameter.on_particle_death = function(particle) {
-          return kill_particle_line(parameter.scene, particle);
+        parameter.on_particle_death = function(particle, iteration_progress) {
+          return kill_particle_line(parameter.scene, particle, iteration_progress);
         };
         drawMeshgrid(scene);
         algorithm = new differential_evolution(parameter);

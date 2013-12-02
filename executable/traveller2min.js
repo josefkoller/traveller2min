@@ -286,10 +286,9 @@
   parameter11.objective_name = 'drop wave';
 
   parameter11.objective = function(X) {
-    var gsum, x, y;
+    var gsum, x;
     x = X[0];
-    y = X[1];
-    gsum = x * x + y * y;
+    gsum = x * x;
     return -(1 + Math.cos(12 * Math.sqrt(gsum))) / (0.5 * gsum + 2);
   };
 
@@ -300,11 +299,11 @@
 
   parameter11.search_space = [search_space11, search_space11];
 
-  parameter11.number_of_dimensions = 2;
+  parameter11.number_of_dimensions = 1;
 
   parameter11.number_of_particles = 64;
 
-  parameter11.number_of_iterations = 150;
+  parameter11.number_of_iterations = 100;
 
   Particle = (function() {
     function Particle(parameter_value, objective_value) {

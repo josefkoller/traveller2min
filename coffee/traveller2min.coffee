@@ -126,14 +126,14 @@ parameter11 = {}
 parameter11.objective_name = 'drop wave'
 parameter11.objective = (X) ->
   x = X[0]
-  y = X[1]
-  gsum = x*x + y*y
+  #y = X[1]
+  gsum = x*x # + y*y
   -(1 + Math.cos(12*Math.sqrt(gsum))) / (0.5*gsum + 2)
 search_space11 = ( min: -Math.PI*2, max: Math.PI*2 )
 parameter11.search_space = [search_space11, search_space11]
-parameter11.number_of_dimensions = 2
+parameter11.number_of_dimensions = 1
 parameter11.number_of_particles = 64
-parameter11.number_of_iterations = 150
+parameter11.number_of_iterations = 100
 
 
 # Particle class...

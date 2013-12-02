@@ -1,9 +1,9 @@
 # traveller2min
 
+#= require <stochastic_optimization>
 #= require <differential_evolution>
-#= require <performance_functions>
-
 #= require <particle_swarm_optimization>
+#= require <performance_functions>
 
 # GRAPHICAL USER INTERFACE, using c3dl-js-library, 3D graphical output and keyboard, mouse input
 (->
@@ -297,7 +297,7 @@
       parameter.on_particle_death = (particle,iteration_progress) ->
         kill_particle_line(parameter.scene, particle, iteration_progress)
       drawMeshgrid scene
-      algorithm =new particle_swarm_optimization(parameter) # ALGORITHM SELECTION a_s
+      algorithm =new differential_evolution(parameter) # ALGORITHM SELECTION a_s
       algorithm.run()
 
     c3dl.addMainCallBack traveller_main, "traveller_canvas"

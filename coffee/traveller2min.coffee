@@ -3,7 +3,14 @@
 #= require <stochastic_optimization>
 #= require <differential_evolution>
 #= require <particle_swarm_optimization>
+#= require <mu_over_rho_comma_lambda>
 #= require <performance_functions>
+
+algorithm_parameter = parameter7 #7, 10... more than 1 min
+algorithm_parameter.number_of_iterations = 300
+create_algorithm = (parameter) ->
+  new mu_over_rho_comma_lambda parameter
+
 
 # GRAPHICAL USER INTERFACE, using c3dl-js-library, 3D graphical output and keyboard, mouse input
 (->
@@ -279,7 +286,7 @@
     run_evolution = (scene) ->
       clear_lines scene
       best_marker = undefined
-      parameter = parameter10 # PARAMETER SELECTION p_s
+      parameter = algorithm_parameter
       $('#objective_name').html(parameter.objective_name)
       $('#number_of_particles').html(parameter.number_of_particles)
       $('#number_of_iterations').html(parameter.number_of_iterations)
@@ -297,7 +304,7 @@
       parameter.on_particle_death = (particle,iteration_progress) ->
         kill_particle_line(parameter.scene, particle, iteration_progress)
       drawMeshgrid scene
-      algorithm =new differential_evolution(parameter) # ALGORITHM SELECTION a_s
+      algorithm = create_algorithm parameter
       algorithm.run()
 
     c3dl.addMainCallBack traveller_main, "traveller_canvas"

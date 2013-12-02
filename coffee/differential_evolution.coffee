@@ -19,7 +19,9 @@ class differential_evolution
       xi = 0
       while xi < parameter.number_of_dimensions
         # HEART OF DE...   c += m1*(r1 - r2) + m2*(best - c)
-        child_xi = current[xi] + parameter.mutation_factor1 * (random2[xi] - random1[xi]) + parameter.mutation_factor2 * (best[xi] - current[xi])
+        child_xi = current[xi] + 
+          parameter.mutation_factor1 * (random2[xi] - random1[xi]) + 
+          parameter.mutation_factor2 * (best[xi] - current[xi])
         child.push child_xi
         xi++
       child

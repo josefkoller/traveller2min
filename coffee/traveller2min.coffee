@@ -1,338 +1,10 @@
-# differential evolution algorithm
+# traveller2min
 
-ITERATION_SLEEP = 1/40 * 1000 # milliseconds
-DISPLAY_ITERATION_INFO = true
-SHOW_DEATH_PARTICLE = false
-
-parameter1 = {}
-parameter1.objective_name = 'beales'
-parameter1.objective = (X) ->
-  x = X[0]
-  y = X[1]
-  square(1.5 - x + x * y) + square(2.25 - x + x * y * y) + square(2.625 - x + x * y * y * y)
-parameter1.search_space = [(min: -4.5, max: 4.5),(min: -4.5, max: 4.5)]
-parameter1.number_of_dimensions = 2
-parameter1.number_of_particles = 64 
-parameter1.number_of_iterations = 30
-
-parameter2 = {}
-parameter2.objective_name = 'rosenbrock'
-parameter2.objective = (X) ->
-	x = X[0]
-	y = X[1]
-	(100*square(y-x*x)+square(y-1))
-parameter2.search_space = [(min: -0.5, max: 3),(min: -1.5, max: 2.0)]
-parameter2.number_of_dimensions = 2
-parameter2.number_of_particles = 64
-parameter2.number_of_iterations = 50
-
-parameter3 = {}
-parameter3.objective_name = 'goldstein-price'
-parameter3.objective = (X) ->
-  x = X[0]
-  y = X[1]
-  (1+square(x+y+1)*(19-14*x+3*x*x-14*y+6*x*y+3*y*y))*(30+square(2*x-3*y)*(18-32*x+12*x*x+48*y-36*x*y+27*y*y))
-parameter3.search_space = [(min: -1.5, max: 1.5),(min: -1.5, max: 1.5)]
-parameter3.number_of_dimensions = 2
-parameter3.number_of_particles = 64
-parameter3.number_of_iterations = 200
-
-parameter4 = {}
-parameter4.objective_name = 'bukin function n. 6'
-parameter4.objective = (X) ->
-  x = X[0]
-  y = X[1]
-  (100*Math.sqrt(Math.abs(y-0.01*x*x))+0.01*Math.abs(x+10))
-parameter4.search_space = [(min: -15, max: -5),(min: -3, max: 3)]
-parameter4.number_of_dimensions = 2
-parameter4.number_of_particles = 256
-parameter4.number_of_iterations = 1000
-
-parameter5 = {}
-parameter5.objective_name = 'ackleys'
-parameter5.objective = (X) ->
-  x = X[0]
-  y = X[1]
-  (-20*Math.exp(-0.2*Math.sqrt(0.5*(x*x+y*y)))-Math.exp(0.5*(Math.cos(2*Math.PI*x)+Math.cos(2*Math.PI*y)))+20+Math.exp(1))
-parameter5.search_space = [(min: -5, max: 5),(min: -5, max: 5)]
-parameter5.number_of_dimensions = 2
-parameter5.number_of_particles = 64
-parameter5.number_of_iterations = 200
-
-parameter6 = {}
-parameter6.objective_name = 'matyas'
-parameter6.objective = (X) ->
-  x = X[0]
-  y = X[1]
-  (0.26*(x*x+y*y)-0.48*x*y)
-parameter6.search_space = [(min: -10, max: 10),(min: -10, max: 10)]
-parameter6.number_of_dimensions = 2
-parameter6.number_of_particles = 64
-parameter6.number_of_iterations = 200
-
-parameter7 = {}
-parameter7.objective_name = 'hoelder table'
-parameter7.objective = (X) ->
-  x = X[0]
-  y = X[1]
-  (-Math.abs(Math.sin(x)*Math.cos(y)*Math.exp(Math.abs(1-(Math.sqrt(x*x+y*y)/Math.PI)))))
-parameter7.search_space = [(min: -10, max: 10),(min: -10, max: 10)]
-parameter7.number_of_dimensions = 2
-parameter7.number_of_particles = 64
-parameter7.number_of_iterations = 400
-
-parameter8 = {}
-parameter8.objective_name = 'schaffer function n.3'
-parameter8.objective = (X) ->
-  x = X[0]
-  y = X[1]
-  (0.5+(square(Math.sin(x*x-y*y))-0.5)/square(1+0.001*(x*x+y*y)))
-parameter8.search_space = [(min: -100, max: 100),(min: -100, max: 100)]
-parameter8.number_of_dimensions = 2
-parameter8.number_of_particles = 64 
-parameter8.number_of_iterations = 800 
-
-parameter9 = {}
-parameter9.objective_name = 'styblinski-tang'
-parameter9.objective = (X) ->
-  z = 0
-  for x in X
-    z += x*x*x*x - 16*x*x + 5*x
-  z*0.5
-parameter9.search_space = []
-for i in [1..20]
-  parameter9.search_space.push(min: -5, max: 5)
-parameter9.number_of_dimensions = parameter9.search_space.length
-parameter9.number_of_particles = 2000
-parameter9.number_of_iterations = 200
-
-parameter10 = {}
-parameter10.objective_name = 'six-hump camel back'
-parameter10.objective = (X) ->
-  x = X[0]
-  y = X[1]
-  x2 = x*x
-  x4 = x2*x2
-  y2 = y*y
-  (4 - 2.1*x2 + x4/3)*x2 + x*y + (-4 + 4*y2)*y2
-parameter10.search_space = [
-  ( min: -3, max: 3 ),
-  ( min: -3, max: 3 )
-]
-parameter10.number_of_dimensions = 2
-parameter10.number_of_particles = 64
-
-parameter11 = {}
-parameter11.objective_name = 'drop wave'
-parameter11.objective = (X) ->
-  x = X[0]
-  #y = X[1]
-  gsum = x*x # + y*y
-  -(1 + Math.cos(12*Math.sqrt(gsum))) / (0.5*gsum + 2)
-search_space11 = ( min: -Math.PI*2, max: Math.PI*2 )
-parameter11.search_space = [search_space11, search_space11]
-parameter11.number_of_dimensions = 1
-parameter11.number_of_particles = 64
-parameter11.number_of_iterations = 100
-
-parameter12 = {}
-parameter12.objective_name = "random shekel's foxholes"
-parameter12.objective = (X) ->
-  z = 0
-  m = 30
-  for x in X
-    c = Math.random()
-    for i in [1...m]
-      a = Math.random()
-      z += 1/(square(x - a) + c)
-  -z
-search_space12 = (min: 0, max: 1)
-parameter12.search_space = [search_space12, search_space12]
-parameter12.number_of_dimensions = 2
-parameter12.number_of_particles = 128
-parameter12.number_of_iterations = 300
+#= require <differential_evolution>
+#= require <differential_evolution_examples>
 
 
-# Particle class...
-class Particle
-  constructor: (parameter_value, objective_value) ->
-    @parameter_value = parameter_value
-    @objective_value = objective_value
-class ParticleStorage
-  constructor: (parameter) ->
-    @parameter = parameter
-  shuffle:  ->
-    @particles = new Array()
-    @current_best_particle = null
-    shuffling_i = 0
-    while shuffling_i < @parameter.number_of_particles
-      @add_random_particle()
-      shuffling_i++
-
-  check_best_particle: (new_particle) ->
-    return  if @current_best_particle? and @current_best_particle.objective_value < new_particle.objective_value
-    @parameter.on_best_particle_changes(new_particle) 
-    @current_best_particle = new_particle
-
-  add: (parameter_value, objective_value) ->
-    particle = new Particle(parameter_value, objective_value)
-    @particles.push particle
-    @parameter.on_particle_creation particle
-    @check_best_particle particle
-
-  check_parameter_value_in_search_space: (parameter_value) ->
-    parameter_i = 0
-    while parameter_i < parameter_value.length
-      dimension_value = parameter_value[parameter_i]
-      search_space = @parameter.search_space[parameter_i]
-      return @create_random_parameter_value() if dimension_value < search_space.min or dimension_value > search_space.max
-      parameter_i++
-    parameter_value
-
-
-  create_random_parameter_value: () ->
-    parameter_value = new Array()
-    ri = 0
-    while ri < @parameter.number_of_dimensions
-      search_space = @parameter.search_space[ri]
-      width = search_space.max - search_space.min
-      parameter_value_xi = search_space.min + width * Math.random()
-      parameter_value.push parameter_value_xi
-      ri++
-    parameter_value
-
-  add_random_particle: ->
-    parameter_value = @create_random_parameter_value()
-    objective_value = @parameter.objective(parameter_value)
-    @add parameter_value, objective_value
-
-  
-  # TODO: make create function, check distance, quasi-random
-  pick_random_particle: ->
-    index = Math.round(Math.random() * (@particles.length - 1))
-    @particles[index]
-
-run = ->
-  algorithm = new differential_evolution()
-  algorithm.run()
-
-objective1 = (x) ->
-  x * x
-
-square = (x) ->
-  x * x
-
-objective2 = (X) ->
-  x = X[0]
-  y = X[1]
-  square(1.5 - x + x * y) + square(2.25 - x + x * y * y) + square(2.625 - x + x * y * y * y)
-
-class differential_evolution
-  constructor: (parameter) ->
-    @parameter = parameter or {}
-    @parameter.objective = parameter.objective or objective1
-    @parameter.search_space = parameter.search_space or [(min: -1, max: 1)]
-    @parameter.number_of_dimensions = parameter.number_of_dimensions or 1
-    @parameter.number_of_particles = parameter.number_of_particles or 100
-    @parameter.number_of_iterations = parameter.number_of_iterations or 10
-    @parameter.mutation_factor1 = parameter.mutation_factor1 or 0.7
-    @parameter.mutation_factor2 = parameter.mutation_factor2 or 0.9
-    @parameter.cross_over_ratio = parameter.cross_over_ratio or 0.8
-
-  run: =>
-    $('#termination_display').html "running..."
-    @initialize()
-    @iteration()
-
-  iteration: () ->
-    if DISPLAY_ITERATION_INFO
-      $('#iteration_display').html "<br/>iteration: #{@current_iteration}/#{@parameter.number_of_iterations}"
-    @mutation()
-    @recombination()
-    @selection()
-    that = this
-    if(@start_iteration())
-      window.setTimeout((() -> that.iteration()), ITERATION_SLEEP)
-    else
-      @termination()
-
-  initialize: => 
-    @particles = new ParticleStorage(@parameter)
-    @particles.shuffle()
-    @current_iteration = 0
-
-  start_iteration: () ->
-    return false  if @current_iteration is @parameter.number_of_iterations
-    @iteration_progress = @current_iteration / @parameter.number_of_iterations
-    @current_iteration++
-    true
-
-  mutation: =>
-    particle_mutation = (parameter, current, random1, random2, best) ->
-      child = new Array()
-      xi = 0
-      while xi < parameter.number_of_dimensions
-        child_xi = current[xi] + parameter.mutation_factor1 * (random2[xi] - random1[xi]) + parameter.mutation_factor2 * (best[xi] - current[xi])
-        child.push child_xi
-        xi++
-      child
-    for particle in @particles.particles
-      random1 = @particles.pick_random_particle()
-      random2 = @particles.pick_random_particle()
-      best = @particles.current_best_particle
-      child_parameter_value = particle_mutation(@parameter, particle.parameter_value, random1.parameter_value, random2.parameter_value, best.parameter_value)
-      child_parameter_value = @particles.check_parameter_value_in_search_space child_parameter_value
-      child_objective_value = @parameter.objective(child_parameter_value)
-      particle.child = new Particle(child_parameter_value, child_objective_value)
-
-  recombination: =>
-    for particle in @particles.particles
-      particle.cross_over = Math.random() < @parameter.cross_over_ratio
-
-  selection: =>
-    child_wins = 0
-    for particle in @particles.particles
-      if particle.cross_over and particle.child.dominates(particle)
-        child_wins++
-        @parameter.on_particle_death(particle, @iteration_progress)
-        particle.parameter_value = particle.child.parameter_value
-        particle.objective_value = particle.child.objective_value
-        @parameter.on_particle_creation(particle)
-        @particles.check_best_particle(particle)
-    if DISPLAY_ITERATION_INFO
-      $('#iteration_display').append "<br/>#{child_wins}/#{@particles.particles.length} wins"
-
-  termination: =>
-    best = @particles.current_best_particle
-    text = "FINISHED!<br/>Best particle at termination:<br/>" + best.to_string()
-    $("#termination_display").html text
-
-Particle::dominates = (other) ->
-  @objective_value < other.objective_value
-
-
-Particle::to_string = ->
-  display_float = (float) ->
-     if float < 0.0000001
-       0
-     float
-  parameter_value = "("
-  for dimension_value in @parameter_value
-     parameter_value += display_float(dimension_value) + ", "
-  parameter_value += ")"
-  objective_value = display_float @objective_value
-  "parameter value: " + parameter_value + "<br/>objective value: " + objective_value
-
-
-
-
-
-
-
-
-
-
-
+# GRAPHICAL USER INTERFACE, using c3dl-js-library, 3D graphical output and keyboard, mouse input
 (->
   (->
     addLine = undefined
@@ -341,25 +13,13 @@ Particle::to_string = ->
     clear_lines = undefined
     best_marker = undefined
     scale_lines = undefined
-    axis_length = undefined
     parameter = undefined
     drawMeshgrid = undefined
-    lines = undefined
     scene = undefined
-    square = undefined
-    traveller_main = undefined
     vector_on_axis = undefined
-    z_scaling = undefined
-    addVectors = undefined
-    square = undefined
-    traveller_main = undefined
-    scene = undefined
-    drawMeshgrid = undefined
     z_scaling = 1
     lines = []
     axis_length = undefined
-    add_axis = undefined
-    vector_on_axis = undefined
     traveller_main = (canvas_name) ->
       camera = undefined
       camera_light = undefined
@@ -574,9 +234,6 @@ Particle::to_string = ->
       scene.addObjectToScene line
       line
 
-    square = (x) ->
-      x * x
-
     generation_color1 = [0.8, 0.9, 0]
     generation_color2 = [0, 0.2, 0.8]
     generation_width = 1
@@ -621,7 +278,7 @@ Particle::to_string = ->
     run_evolution = (scene) ->
       clear_lines scene
       best_marker = undefined
-      parameter = parameter12 # PARAMETER SELECTION
+      parameter = parameter10 # PARAMETER SELECTION
       $('#objective_name').html(parameter.objective_name)
       $('#number_of_particles').html(parameter.number_of_particles)
       $('#number_of_iterations').html(parameter.number_of_iterations)

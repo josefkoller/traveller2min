@@ -1,5 +1,5 @@
 (function() {
-  var DISPLAY_ITERATION_INFO, ITERATION_SLEEP, Particle, ParticleStorage, SHOW_DEATH_PARTICLE, differential_evolution, i, objective1, objective2, parameter1, parameter10, parameter11, parameter12, parameter2, parameter3, parameter4, parameter5, parameter6, parameter7, parameter8, parameter9, run, search_space11, search_space12, square, _i,
+  var DISPLAY_ITERATION_INFO, ITERATION_SLEEP, Particle, ParticleStorage, SHOW_DEATH_PARTICLE, differential_evolution, i, parameter1, parameter10, parameter11, parameter12, parameter2, parameter3, parameter4, parameter5, parameter6, parameter7, parameter8, parameter9, search_space11, search_space12, square, _i,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   ITERATION_SLEEP = 1 / 40 * 1000;
@@ -7,6 +7,255 @@
   DISPLAY_ITERATION_INFO = true;
 
   SHOW_DEATH_PARTICLE = false;
+
+  Particle = (function() {
+    function Particle(parameter_value, objective_value) {
+      this.parameter_value = parameter_value;
+      this.objective_value = objective_value;
+    }
+
+    return Particle;
+
+  })();
+
+  ParticleStorage = (function() {
+    function ParticleStorage(parameter) {
+      this.parameter = parameter;
+    }
+
+    ParticleStorage.prototype.shuffle = function() {
+      var shuffling_i, _results;
+      this.particles = new Array();
+      this.current_best_particle = null;
+      shuffling_i = 0;
+      _results = [];
+      while (shuffling_i < this.parameter.number_of_particles) {
+        this.add_random_particle();
+        _results.push(shuffling_i++);
+      }
+      return _results;
+    };
+
+    ParticleStorage.prototype.check_best_particle = function(new_particle) {
+      if ((this.current_best_particle != null) && this.current_best_particle.objective_value < new_particle.objective_value) {
+        return;
+      }
+      this.parameter.on_best_particle_changes(new_particle);
+      return this.current_best_particle = new_particle;
+    };
+
+    ParticleStorage.prototype.add = function(parameter_value, objective_value) {
+      var particle;
+      particle = new Particle(parameter_value, objective_value);
+      this.particles.push(particle);
+      this.parameter.on_particle_creation(particle);
+      return this.check_best_particle(particle);
+    };
+
+    ParticleStorage.prototype.check_parameter_value_in_search_space = function(parameter_value) {
+      var dimension_value, parameter_i, search_space;
+      parameter_i = 0;
+      while (parameter_i < parameter_value.length) {
+        dimension_value = parameter_value[parameter_i];
+        search_space = this.parameter.search_space[parameter_i];
+        if (dimension_value < search_space.min || dimension_value > search_space.max) {
+          return this.create_random_parameter_value();
+        }
+        parameter_i++;
+      }
+      return parameter_value;
+    };
+
+    ParticleStorage.prototype.create_random_parameter_value = function() {
+      var parameter_value, parameter_value_xi, ri, search_space, width;
+      parameter_value = new Array();
+      ri = 0;
+      while (ri < this.parameter.number_of_dimensions) {
+        search_space = this.parameter.search_space[ri];
+        width = search_space.max - search_space.min;
+        parameter_value_xi = search_space.min + width * Math.random();
+        parameter_value.push(parameter_value_xi);
+        ri++;
+      }
+      return parameter_value;
+    };
+
+    ParticleStorage.prototype.add_random_particle = function() {
+      var objective_value, parameter_value;
+      parameter_value = this.create_random_parameter_value();
+      objective_value = this.parameter.objective(parameter_value);
+      return this.add(parameter_value, objective_value);
+    };
+
+    ParticleStorage.prototype.pick_random_particle = function() {
+      var index;
+      index = Math.round(Math.random() * (this.particles.length - 1));
+      return this.particles[index];
+    };
+
+    return ParticleStorage;
+
+  })();
+
+  differential_evolution = (function() {
+    function differential_evolution(parameter) {
+      this.termination = __bind(this.termination, this);
+      this.selection = __bind(this.selection, this);
+      this.recombination = __bind(this.recombination, this);
+      this.mutation = __bind(this.mutation, this);
+      this.initialize = __bind(this.initialize, this);
+      this.run = __bind(this.run, this);
+      this.parameter = parameter || {};
+      this.parameter.objective = parameter.objective || objective1;
+      this.parameter.search_space = parameter.search_space || [
+        {
+          min: -1,
+          max: 1
+        }
+      ];
+      this.parameter.number_of_dimensions = parameter.number_of_dimensions || 1;
+      this.parameter.number_of_particles = parameter.number_of_particles || 100;
+      this.parameter.number_of_iterations = parameter.number_of_iterations || 10;
+      this.parameter.mutation_factor1 = parameter.mutation_factor1 || 0.7;
+      this.parameter.mutation_factor2 = parameter.mutation_factor2 || 0.9;
+      this.parameter.cross_over_ratio = parameter.cross_over_ratio || 0.8;
+    }
+
+    differential_evolution.prototype.run = function() {
+      $('#termination_display').html("running...");
+      this.initialize();
+      return this.iteration();
+    };
+
+    differential_evolution.prototype.iteration = function() {
+      var that;
+      if (DISPLAY_ITERATION_INFO) {
+        $('#iteration_display').html("<br/>iteration: " + this.current_iteration + "/" + this.parameter.number_of_iterations);
+      }
+      this.mutation();
+      this.recombination();
+      this.selection();
+      that = this;
+      if (this.start_iteration()) {
+        return window.setTimeout((function() {
+          return that.iteration();
+        }), ITERATION_SLEEP);
+      } else {
+        return this.termination();
+      }
+    };
+
+    differential_evolution.prototype.initialize = function() {
+      this.particles = new ParticleStorage(this.parameter);
+      this.particles.shuffle();
+      return this.current_iteration = 0;
+    };
+
+    differential_evolution.prototype.start_iteration = function() {
+      if (this.current_iteration === this.parameter.number_of_iterations) {
+        return false;
+      }
+      this.iteration_progress = this.current_iteration / this.parameter.number_of_iterations;
+      this.current_iteration++;
+      return true;
+    };
+
+    differential_evolution.prototype.mutation = function() {
+      var best, child_objective_value, child_parameter_value, particle, particle_mutation, random1, random2, _i, _len, _ref, _results;
+      particle_mutation = function(parameter, current, random1, random2, best) {
+        var child, child_xi, xi;
+        child = new Array();
+        xi = 0;
+        while (xi < parameter.number_of_dimensions) {
+          child_xi = current[xi] + parameter.mutation_factor1 * (random2[xi] - random1[xi]) + parameter.mutation_factor2 * (best[xi] - current[xi]);
+          child.push(child_xi);
+          xi++;
+        }
+        return child;
+      };
+      _ref = this.particles.particles;
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        particle = _ref[_i];
+        random1 = this.particles.pick_random_particle();
+        random2 = this.particles.pick_random_particle();
+        best = this.particles.current_best_particle;
+        child_parameter_value = particle_mutation(this.parameter, particle.parameter_value, random1.parameter_value, random2.parameter_value, best.parameter_value);
+        child_parameter_value = this.particles.check_parameter_value_in_search_space(child_parameter_value);
+        child_objective_value = this.parameter.objective(child_parameter_value);
+        _results.push(particle.child = new Particle(child_parameter_value, child_objective_value));
+      }
+      return _results;
+    };
+
+    differential_evolution.prototype.recombination = function() {
+      var particle, _i, _len, _ref, _results;
+      _ref = this.particles.particles;
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        particle = _ref[_i];
+        _results.push(particle.cross_over = Math.random() < this.parameter.cross_over_ratio);
+      }
+      return _results;
+    };
+
+    differential_evolution.prototype.selection = function() {
+      var child_wins, particle, _i, _len, _ref;
+      child_wins = 0;
+      _ref = this.particles.particles;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        particle = _ref[_i];
+        if (particle.cross_over && particle.child.dominates(particle)) {
+          child_wins++;
+          this.parameter.on_particle_death(particle, this.iteration_progress);
+          particle.parameter_value = particle.child.parameter_value;
+          particle.objective_value = particle.child.objective_value;
+          this.parameter.on_particle_creation(particle);
+          this.particles.check_best_particle(particle);
+        }
+      }
+      if (DISPLAY_ITERATION_INFO) {
+        return $('#iteration_display').append("<br/>" + child_wins + "/" + this.particles.particles.length + " wins");
+      }
+    };
+
+    differential_evolution.prototype.termination = function() {
+      var best, text;
+      best = this.particles.current_best_particle;
+      text = "FINISHED!<br/>Best particle at termination:<br/>" + best.to_string();
+      return $("#termination_display").html(text);
+    };
+
+    return differential_evolution;
+
+  })();
+
+  Particle.prototype.dominates = function(other) {
+    return this.objective_value < other.objective_value;
+  };
+
+  Particle.prototype.to_string = function() {
+    var dimension_value, display_float, objective_value, parameter_value, _i, _len, _ref;
+    display_float = function(float) {
+      if (float < 0.0000001) {
+        0;
+      }
+      return float;
+    };
+    parameter_value = "(";
+    _ref = this.parameter_value;
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      dimension_value = _ref[_i];
+      parameter_value += display_float(dimension_value) + ", ";
+    }
+    parameter_value += ")";
+    objective_value = display_float(this.objective_value);
+    return "parameter value: " + parameter_value + "<br/>objective value: " + objective_value;
+  };
+
+  square = function(x) {
+    return x * x;
+  };
 
   parameter1 = {};
 
@@ -281,6 +530,8 @@
 
   parameter10.number_of_particles = 64;
 
+  parameter10.number_of_iterations = 100;
+
   parameter11 = {};
 
   parameter11.objective_name = 'drop wave';
@@ -301,7 +552,7 @@
 
   parameter11.number_of_dimensions = 1;
 
-  parameter11.number_of_particles = 64;
+  parameter11.number_of_particles = 100;
 
   parameter11.number_of_iterations = 100;
 
@@ -337,272 +588,6 @@
 
   parameter12.number_of_iterations = 300;
 
-  Particle = (function() {
-    function Particle(parameter_value, objective_value) {
-      this.parameter_value = parameter_value;
-      this.objective_value = objective_value;
-    }
-
-    return Particle;
-
-  })();
-
-  ParticleStorage = (function() {
-    function ParticleStorage(parameter) {
-      this.parameter = parameter;
-    }
-
-    ParticleStorage.prototype.shuffle = function() {
-      var shuffling_i, _results;
-      this.particles = new Array();
-      this.current_best_particle = null;
-      shuffling_i = 0;
-      _results = [];
-      while (shuffling_i < this.parameter.number_of_particles) {
-        this.add_random_particle();
-        _results.push(shuffling_i++);
-      }
-      return _results;
-    };
-
-    ParticleStorage.prototype.check_best_particle = function(new_particle) {
-      if ((this.current_best_particle != null) && this.current_best_particle.objective_value < new_particle.objective_value) {
-        return;
-      }
-      this.parameter.on_best_particle_changes(new_particle);
-      return this.current_best_particle = new_particle;
-    };
-
-    ParticleStorage.prototype.add = function(parameter_value, objective_value) {
-      var particle;
-      particle = new Particle(parameter_value, objective_value);
-      this.particles.push(particle);
-      this.parameter.on_particle_creation(particle);
-      return this.check_best_particle(particle);
-    };
-
-    ParticleStorage.prototype.check_parameter_value_in_search_space = function(parameter_value) {
-      var dimension_value, parameter_i, search_space;
-      parameter_i = 0;
-      while (parameter_i < parameter_value.length) {
-        dimension_value = parameter_value[parameter_i];
-        search_space = this.parameter.search_space[parameter_i];
-        if (dimension_value < search_space.min || dimension_value > search_space.max) {
-          return this.create_random_parameter_value();
-        }
-        parameter_i++;
-      }
-      return parameter_value;
-    };
-
-    ParticleStorage.prototype.create_random_parameter_value = function() {
-      var parameter_value, parameter_value_xi, ri, search_space, width;
-      parameter_value = new Array();
-      ri = 0;
-      while (ri < this.parameter.number_of_dimensions) {
-        search_space = this.parameter.search_space[ri];
-        width = search_space.max - search_space.min;
-        parameter_value_xi = search_space.min + width * Math.random();
-        parameter_value.push(parameter_value_xi);
-        ri++;
-      }
-      return parameter_value;
-    };
-
-    ParticleStorage.prototype.add_random_particle = function() {
-      var objective_value, parameter_value;
-      parameter_value = this.create_random_parameter_value();
-      objective_value = this.parameter.objective(parameter_value);
-      return this.add(parameter_value, objective_value);
-    };
-
-    ParticleStorage.prototype.pick_random_particle = function() {
-      var index;
-      index = Math.round(Math.random() * (this.particles.length - 1));
-      return this.particles[index];
-    };
-
-    return ParticleStorage;
-
-  })();
-
-  run = function() {
-    var algorithm;
-    algorithm = new differential_evolution();
-    return algorithm.run();
-  };
-
-  objective1 = function(x) {
-    return x * x;
-  };
-
-  square = function(x) {
-    return x * x;
-  };
-
-  objective2 = function(X) {
-    var x, y;
-    x = X[0];
-    y = X[1];
-    return square(1.5 - x + x * y) + square(2.25 - x + x * y * y) + square(2.625 - x + x * y * y * y);
-  };
-
-  differential_evolution = (function() {
-    function differential_evolution(parameter) {
-      this.termination = __bind(this.termination, this);
-      this.selection = __bind(this.selection, this);
-      this.recombination = __bind(this.recombination, this);
-      this.mutation = __bind(this.mutation, this);
-      this.initialize = __bind(this.initialize, this);
-      this.run = __bind(this.run, this);
-      this.parameter = parameter || {};
-      this.parameter.objective = parameter.objective || objective1;
-      this.parameter.search_space = parameter.search_space || [
-        {
-          min: -1,
-          max: 1
-        }
-      ];
-      this.parameter.number_of_dimensions = parameter.number_of_dimensions || 1;
-      this.parameter.number_of_particles = parameter.number_of_particles || 100;
-      this.parameter.number_of_iterations = parameter.number_of_iterations || 10;
-      this.parameter.mutation_factor1 = parameter.mutation_factor1 || 0.7;
-      this.parameter.mutation_factor2 = parameter.mutation_factor2 || 0.9;
-      this.parameter.cross_over_ratio = parameter.cross_over_ratio || 0.8;
-    }
-
-    differential_evolution.prototype.run = function() {
-      $('#termination_display').html("running...");
-      this.initialize();
-      return this.iteration();
-    };
-
-    differential_evolution.prototype.iteration = function() {
-      var that;
-      if (DISPLAY_ITERATION_INFO) {
-        $('#iteration_display').html("<br/>iteration: " + this.current_iteration + "/" + this.parameter.number_of_iterations);
-      }
-      this.mutation();
-      this.recombination();
-      this.selection();
-      that = this;
-      if (this.start_iteration()) {
-        return window.setTimeout((function() {
-          return that.iteration();
-        }), ITERATION_SLEEP);
-      } else {
-        return this.termination();
-      }
-    };
-
-    differential_evolution.prototype.initialize = function() {
-      this.particles = new ParticleStorage(this.parameter);
-      this.particles.shuffle();
-      return this.current_iteration = 0;
-    };
-
-    differential_evolution.prototype.start_iteration = function() {
-      if (this.current_iteration === this.parameter.number_of_iterations) {
-        return false;
-      }
-      this.iteration_progress = this.current_iteration / this.parameter.number_of_iterations;
-      this.current_iteration++;
-      return true;
-    };
-
-    differential_evolution.prototype.mutation = function() {
-      var best, child_objective_value, child_parameter_value, particle, particle_mutation, random1, random2, _j, _len, _ref, _results;
-      particle_mutation = function(parameter, current, random1, random2, best) {
-        var child, child_xi, xi;
-        child = new Array();
-        xi = 0;
-        while (xi < parameter.number_of_dimensions) {
-          child_xi = current[xi] + parameter.mutation_factor1 * (random2[xi] - random1[xi]) + parameter.mutation_factor2 * (best[xi] - current[xi]);
-          child.push(child_xi);
-          xi++;
-        }
-        return child;
-      };
-      _ref = this.particles.particles;
-      _results = [];
-      for (_j = 0, _len = _ref.length; _j < _len; _j++) {
-        particle = _ref[_j];
-        random1 = this.particles.pick_random_particle();
-        random2 = this.particles.pick_random_particle();
-        best = this.particles.current_best_particle;
-        child_parameter_value = particle_mutation(this.parameter, particle.parameter_value, random1.parameter_value, random2.parameter_value, best.parameter_value);
-        child_parameter_value = this.particles.check_parameter_value_in_search_space(child_parameter_value);
-        child_objective_value = this.parameter.objective(child_parameter_value);
-        _results.push(particle.child = new Particle(child_parameter_value, child_objective_value));
-      }
-      return _results;
-    };
-
-    differential_evolution.prototype.recombination = function() {
-      var particle, _j, _len, _ref, _results;
-      _ref = this.particles.particles;
-      _results = [];
-      for (_j = 0, _len = _ref.length; _j < _len; _j++) {
-        particle = _ref[_j];
-        _results.push(particle.cross_over = Math.random() < this.parameter.cross_over_ratio);
-      }
-      return _results;
-    };
-
-    differential_evolution.prototype.selection = function() {
-      var child_wins, particle, _j, _len, _ref;
-      child_wins = 0;
-      _ref = this.particles.particles;
-      for (_j = 0, _len = _ref.length; _j < _len; _j++) {
-        particle = _ref[_j];
-        if (particle.cross_over && particle.child.dominates(particle)) {
-          child_wins++;
-          this.parameter.on_particle_death(particle, this.iteration_progress);
-          particle.parameter_value = particle.child.parameter_value;
-          particle.objective_value = particle.child.objective_value;
-          this.parameter.on_particle_creation(particle);
-          this.particles.check_best_particle(particle);
-        }
-      }
-      if (DISPLAY_ITERATION_INFO) {
-        return $('#iteration_display').append("<br/>" + child_wins + "/" + this.particles.particles.length + " wins");
-      }
-    };
-
-    differential_evolution.prototype.termination = function() {
-      var best, text;
-      best = this.particles.current_best_particle;
-      text = "FINISHED!<br/>Best particle at termination:<br/>" + best.to_string();
-      return $("#termination_display").html(text);
-    };
-
-    return differential_evolution;
-
-  })();
-
-  Particle.prototype.dominates = function(other) {
-    return this.objective_value < other.objective_value;
-  };
-
-  Particle.prototype.to_string = function() {
-    var dimension_value, display_float, objective_value, parameter_value, _j, _len, _ref;
-    display_float = function(float) {
-      if (float < 0.0000001) {
-        0;
-      }
-      return float;
-    };
-    parameter_value = "(";
-    _ref = this.parameter_value;
-    for (_j = 0, _len = _ref.length; _j < _len; _j++) {
-      dimension_value = _ref[_j];
-      parameter_value += display_float(dimension_value) + ", ";
-    }
-    parameter_value += ")";
-    objective_value = display_float(this.objective_value);
-    return "parameter value: " + parameter_value + "<br/>objective value: " + objective_value;
-  };
-
   (function() {
     return (function() {
       var addLine, addVectors, add_axis, add_particle_line, axis_length, best_color1, best_color2, best_marker, best_particle_changes, best_width, clear_lines, death_color1, death_color2, death_width, drawMeshgrid, generation_color1, generation_color2, generation_width, kill_particle_line, lines, on_scene_object_picking, parameter, run_evolution, scale_line, scale_lines, scene, traveller_main, vector_on_axis, z_scaling;
@@ -612,25 +597,13 @@
       clear_lines = void 0;
       best_marker = void 0;
       scale_lines = void 0;
-      axis_length = void 0;
       parameter = void 0;
       drawMeshgrid = void 0;
-      lines = void 0;
       scene = void 0;
-      square = void 0;
-      traveller_main = void 0;
       vector_on_axis = void 0;
-      z_scaling = void 0;
-      addVectors = void 0;
-      square = void 0;
-      traveller_main = void 0;
-      scene = void 0;
-      drawMeshgrid = void 0;
       z_scaling = 1;
       lines = [];
       axis_length = void 0;
-      add_axis = void 0;
-      vector_on_axis = void 0;
       traveller_main = function(canvas_name) {
         var camera, camera_light, canvas, configure_camera, create_collada, create_light, generation, options, renderer, traveller;
         camera = void 0;
@@ -908,9 +881,6 @@
         scene.addObjectToScene(line);
         return line;
       };
-      square = function(x) {
-        return x * x;
-      };
       generation_color1 = [0.8, 0.9, 0];
       generation_color2 = [0, 0.2, 0.8];
       generation_width = 1;
@@ -962,7 +932,7 @@
         var algorithm, element, search_space, _j, _len, _ref;
         clear_lines(scene);
         best_marker = void 0;
-        parameter = parameter12;
+        parameter = parameter10;
         $('#objective_name').html(parameter.objective_name);
         $('#number_of_particles').html(parameter.number_of_particles);
         $('#number_of_iterations').html(parameter.number_of_iterations);

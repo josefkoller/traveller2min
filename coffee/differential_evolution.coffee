@@ -1,6 +1,6 @@
 # differential evolution algorithm
 
-ITERATION_SLEEP = 1/40 * 1000 # milliseconds
+ITERATION_SLEEP = 1 #chrome is very good in updating the scene. firefox: 1/40 * 1000 # milliseconds
 DISPLAY_ITERATION_INFO = true
 SHOW_DEATH_PARTICLE = false
 

@@ -106,6 +106,35 @@ parameter9.number_of_dimensions = parameter9.search_space.length
 parameter9.number_of_particles = 2000
 parameter9.number_of_iterations = 200
 
+parameter10 = {}
+parameter10.objective_name = 'six-hump camel back'
+parameter10.objective = (X) ->
+  x = X[0]
+  y = X[1]
+  x2 = x*x
+  x4 = x2*x2
+  y2 = y*y
+  (4 - 2.1*x2 + x4/3)*x2 + x*y + (-4 + 4*y2)*y2
+parameter10.search_space = [
+  ( min: -3, max: 3 ),
+  ( min: -3, max: 3 )
+]
+parameter10.number_of_dimensions = 2
+parameter10.number_of_particles = 64
+
+parameter11 = {}
+parameter11.objective_name = 'drop wave'
+parameter11.objective = (X) ->
+  x = X[0]
+  y = X[1]
+  gsum = x*x + y*y
+  -(1 + Math.cos(12*Math.sqrt(gsum))) / (0.5*gsum + 2)
+search_space11 = ( min: -Math.PI*2, max: Math.PI*2 )
+parameter11.search_space = [search_space11, search_space11]
+parameter11.number_of_dimensions = 2
+parameter11.number_of_particles = 64
+parameter11.number_of_iterations = 150
+
 
 # Particle class...
 class Particle
@@ -575,7 +604,7 @@ Particle::to_string = ->
     run_evolution = (scene) ->
       clear_lines scene
       best_marker = undefined
-      parameter = parameter2 # PARAMETER SELECTION
+      parameter = parameter11 # PARAMETER SELECTION
       $('#objective_name').html(parameter.objective_name)
       $('#number_of_particles').html(parameter.number_of_particles)
       $('#number_of_iterations').html(parameter.number_of_iterations)

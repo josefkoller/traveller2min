@@ -1,5 +1,5 @@
 (function() {
-  var DISPLAY_ITERATION_INFO, ITERATION_SLEEP, Particle, ParticleStorage, SHOW_DEATH_PARTICLE, differential_evolution, i, objective1, objective2, parameter1, parameter2, parameter3, parameter4, parameter5, parameter6, parameter7, parameter8, parameter9, run, square, _i,
+  var DISPLAY_ITERATION_INFO, ITERATION_SLEEP, Particle, ParticleStorage, SHOW_DEATH_PARTICLE, differential_evolution, i, objective1, objective2, parameter1, parameter10, parameter11, parameter2, parameter3, parameter4, parameter5, parameter6, parameter7, parameter8, parameter9, run, search_space11, square, _i,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   ITERATION_SLEEP = 1 / 40 * 1000;
@@ -252,6 +252,59 @@
   parameter9.number_of_particles = 2000;
 
   parameter9.number_of_iterations = 200;
+
+  parameter10 = {};
+
+  parameter10.objective_name = 'six-hump camel back';
+
+  parameter10.objective = function(X) {
+    var x, x2, x4, y, y2;
+    x = X[0];
+    y = X[1];
+    x2 = x * x;
+    x4 = x2 * x2;
+    y2 = y * y;
+    return (4 - 2.1 * x2 + x4 / 3) * x2 + x * y + (-4 + 4 * y2) * y2;
+  };
+
+  parameter10.search_space = [
+    {
+      min: -3,
+      max: 3
+    }, {
+      min: -3,
+      max: 3
+    }
+  ];
+
+  parameter10.number_of_dimensions = 2;
+
+  parameter10.number_of_particles = 64;
+
+  parameter11 = {};
+
+  parameter11.objective_name = 'drop wave';
+
+  parameter11.objective = function(X) {
+    var gsum, x, y;
+    x = X[0];
+    y = X[1];
+    gsum = x * x + y * y;
+    return -(1 + Math.cos(12 * Math.sqrt(gsum))) / (0.5 * gsum + 2);
+  };
+
+  search_space11 = {
+    min: -Math.PI * 2,
+    max: Math.PI * 2
+  };
+
+  parameter11.search_space = [search_space11, search_space11];
+
+  parameter11.number_of_dimensions = 2;
+
+  parameter11.number_of_particles = 64;
+
+  parameter11.number_of_iterations = 150;
 
   Particle = (function() {
     function Particle(parameter_value, objective_value) {
@@ -878,7 +931,7 @@
         var algorithm, element, search_space, _j, _len, _ref;
         clear_lines(scene);
         best_marker = void 0;
-        parameter = parameter2;
+        parameter = parameter11;
         $('#objective_name').html(parameter.objective_name);
         $('#number_of_particles').html(parameter.number_of_particles);
         $('#number_of_iterations').html(parameter.number_of_iterations);

@@ -135,6 +135,23 @@ parameter11.number_of_dimensions = 1
 parameter11.number_of_particles = 64
 parameter11.number_of_iterations = 100
 
+parameter12 = {}
+parameter12.objective_name = "random shekel's foxholes"
+parameter12.objective = (X) ->
+  z = 0
+  m = 30
+  for x in X
+    c = Math.random()
+    for i in [1...m]
+      a = Math.random()
+      z += 1/(square(x - a) + c)
+  -z
+search_space12 = (min: 0, max: 1)
+parameter12.search_space = [search_space12, search_space12]
+parameter12.number_of_dimensions = 2
+parameter12.number_of_particles = 128
+parameter12.number_of_iterations = 300
+
 
 # Particle class...
 class Particle
@@ -604,7 +621,7 @@ Particle::to_string = ->
     run_evolution = (scene) ->
       clear_lines scene
       best_marker = undefined
-      parameter = parameter11 # PARAMETER SELECTION
+      parameter = parameter12 # PARAMETER SELECTION
       $('#objective_name').html(parameter.objective_name)
       $('#number_of_particles').html(parameter.number_of_particles)
       $('#number_of_iterations').html(parameter.number_of_iterations)

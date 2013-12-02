@@ -1,5 +1,5 @@
 (function() {
-  var DISPLAY_ITERATION_INFO, ITERATION_SLEEP, Particle, ParticleStorage, SHOW_DEATH_PARTICLE, differential_evolution, i, objective1, objective2, parameter1, parameter10, parameter11, parameter2, parameter3, parameter4, parameter5, parameter6, parameter7, parameter8, parameter9, run, search_space11, square, _i,
+  var DISPLAY_ITERATION_INFO, ITERATION_SLEEP, Particle, ParticleStorage, SHOW_DEATH_PARTICLE, differential_evolution, i, objective1, objective2, parameter1, parameter10, parameter11, parameter12, parameter2, parameter3, parameter4, parameter5, parameter6, parameter7, parameter8, parameter9, run, search_space11, search_space12, square, _i,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   ITERATION_SLEEP = 1 / 40 * 1000;
@@ -304,6 +304,38 @@
   parameter11.number_of_particles = 64;
 
   parameter11.number_of_iterations = 100;
+
+  parameter12 = {};
+
+  parameter12.objective_name = "random shekel's foxholes";
+
+  parameter12.objective = function(X) {
+    var a, c, m, x, z, _j, _k, _len;
+    z = 0;
+    m = 30;
+    for (_j = 0, _len = X.length; _j < _len; _j++) {
+      x = X[_j];
+      c = Math.random();
+      for (i = _k = 1; 1 <= m ? _k < m : _k > m; i = 1 <= m ? ++_k : --_k) {
+        a = Math.random();
+        z += 1 / (square(x - a) + c);
+      }
+    }
+    return -z;
+  };
+
+  search_space12 = {
+    min: 0,
+    max: 1
+  };
+
+  parameter12.search_space = [search_space12, search_space12];
+
+  parameter12.number_of_dimensions = 2;
+
+  parameter12.number_of_particles = 128;
+
+  parameter12.number_of_iterations = 300;
 
   Particle = (function() {
     function Particle(parameter_value, objective_value) {
@@ -930,7 +962,7 @@
         var algorithm, element, search_space, _j, _len, _ref;
         clear_lines(scene);
         best_marker = void 0;
-        parameter = parameter11;
+        parameter = parameter12;
         $('#objective_name').html(parameter.objective_name);
         $('#number_of_particles').html(parameter.number_of_particles);
         $('#number_of_iterations').html(parameter.number_of_iterations);

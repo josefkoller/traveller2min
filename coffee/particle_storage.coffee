@@ -20,8 +20,11 @@ class ParticleStorage
     @parameter.on_best_particle_changes(new_particle) 
     @current_best_particle = new_particle
 
+  construct_particle: (parameter_value, objective_value) ->
+    new Particle parameter_value, objective_value
+
   add: (parameter_value, objective_value) ->
-    particle = new Particle(parameter_value, objective_value)
+    particle = @construct_particle parameter_value, objective_value
     @particles.push particle
     @parameter.on_particle_creation particle
     @check_best_particle particle

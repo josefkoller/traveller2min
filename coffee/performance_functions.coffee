@@ -1,4 +1,4 @@
-# differential evolution algorithm - example parameters
+# example parameters - performance functions
 
 square = (x) -> x * x
 

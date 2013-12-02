@@ -1,8 +1,9 @@
 # traveller2min
 
 #= require <differential_evolution>
-#= require <differential_evolution_examples>
+#= require <performance_functions>
 
+#= require <particle_swarm_optimization>
 
 # GRAPHICAL USER INTERFACE, using c3dl-js-library, 3D graphical output and keyboard, mouse input
 (->
@@ -278,7 +279,7 @@
     run_evolution = (scene) ->
       clear_lines scene
       best_marker = undefined
-      parameter = parameter10 # PARAMETER SELECTION
+      parameter = parameter10 # PARAMETER SELECTION p_s
       $('#objective_name').html(parameter.objective_name)
       $('#number_of_particles').html(parameter.number_of_particles)
       $('#number_of_iterations').html(parameter.number_of_iterations)
@@ -296,7 +297,7 @@
       parameter.on_particle_death = (particle,iteration_progress) ->
         kill_particle_line(parameter.scene, particle, iteration_progress)
       drawMeshgrid scene
-      algorithm =new differential_evolution(parameter)
+      algorithm =new particle_swarm_optimization(parameter) # ALGORITHM SELECTION a_s
       algorithm.run()
 
     c3dl.addMainCallBack traveller_main, "traveller_canvas"

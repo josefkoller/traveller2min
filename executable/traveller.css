@@ -4,7 +4,6 @@
       font-weight: bold;
     }
     table {
-
       border-collapse: separate;
       border-spacing: 1em;
     }
@@ -25,4 +24,8 @@
       background: black;
       color: white;
       margin-right: 0px;
+    }
+
+    #objective {
+      width: 500px;
     }

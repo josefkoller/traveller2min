@@ -51,7 +51,9 @@ parameter5.objective_name = 'ackleys'
 parameter5.objective = (X) ->
   x = X[0]
   y = X[1]
-  (-20*Math.exp(-0.2*Math.sqrt(0.5*(x*x+y*y)))-Math.exp(0.5*(Math.cos(2*Math.PI*x)+Math.cos(2*Math.PI*y)))+20+Math.exp(1))
+  (-20*Math.exp(-0.2*Math.sqrt(0.5*(x*x+y*y)))-
+    Math.exp(0.5*(Math.cos(2*Math.PI*x)+Math.cos(2*Math.PI*y)))+
+    20+Math.exp(1))
 parameter5.search_space = [(min: -5, max: 5),(min: -5, max: 5)]
 parameter5.number_of_dimensions = 2
 parameter5.number_of_particles = 64

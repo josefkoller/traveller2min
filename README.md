@@ -1,5 +1,5 @@
 # traveller
-toy simulating a stochastic optimization algorithms (PSO, DE)
+toy simulating stochastic optimization algorithms (PSO, DE)
 
 ## install
 
@@ -11,6 +11,5 @@ download c3dl and extract it to 'canvas3dapi' ('canvas3dapi/scene.js'...)
 open the 'executable/traveller2min.html' file. The chrome browser updates the c3dl-scene pretty fast!
 
 # TODO
-
-- boundary behaviour: mirrow, loop, random , clamp RANDOMIZED
 - unfeasible regions: mark particle as unfeasible, leave in population
+- improve graphical output and user interface

@@ -11,3 +11,8 @@ task :install do
         mv c3dl canvas3dapi;
         rm #{c3dl}"
 end
+
+desc 'Opens traveller.html in your default browser'
+task :open do
+  exec 'xdg-open executable/traveller.html'
+end

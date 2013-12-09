@@ -4,7 +4,7 @@ task :mix_coffee do
 end
 
 desc 'downloads and installs c3dl'
-task :install do
+task :install_c3dl do
   c3dl = 'c3dl-2.2.zip'
   exec "curl -O http://www.c3dl.org/wp-content/releases/#{c3dl};
         unzip #{c3dl};
@@ -12,7 +12,9 @@ task :install do
         rm #{c3dl}"
 end
 
-desc 'Opens traveller.html in your default browser'
-task :open do
-  exec 'xdg-open executable/traveller.html'
+desc 'starts the application'
+task :start do
+  exec 'open executable/traveller.html'
 end
+
+task :default => :start

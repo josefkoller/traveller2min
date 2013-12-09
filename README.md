@@ -1,19 +1,15 @@
 # traveller
-toy simulating stochastic optimization algorithms (PSO, DE)
+toy simulating stochastic optimization algorithms (PSO, DE, (1+1)-strategy)
 
 ## install
 
-download master-branch as zip file or clone it...
-download c3dl and extract it to 'canvas3dapi' ('canvas3dapi/scene.js'...)
-
-or just run
-```
-  rake install
-```
+* download traveller2min: as zip, clone...
+* download the third party c3dl-library or run 'rake install_c3dl'
 
 ## execution
 
 open the 'executable/traveller.html' file. The chrome browser updates the c3dl-scene pretty fast!
+or run 'rake'
 
 # TODO
 - unfeasible regions: mark particle as unfeasible, leave in population

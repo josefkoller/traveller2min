@@ -1,0 +1,110 @@
+# traveller2min fastmode
+
+#= require <../stochastic_optimization>
+#= require <../differential_evolution>
+#= require <../particle_swarm_optimization>
+#= require <../mu_over_rho_comma_lambda>
+#= require <../performance_functions>
+
+
+$(document).ready( ->
+  $('#clear_button').click( ->
+    $('#results tr').remove()
+    $('#results').append '<tr><td>objective value</td><td>parameter value</td></tr>'
+  )
+  $('#run_button').click( ->
+
+
+
+    selected_objective_index = $('#objective_select')[0].selectedIndex
+    algorithm_parameter = eval 'parameter' + (selected_objective_index + 1)
+    #7, 10... more than 1 min
+    algorithm_parameter.number_of_iterations = parseInt($('#number_of_iterations').val())
+    algorithm_parameter.number_of_particles = parseInt($('#number_of_particles').val())
+    create_algorithm = (parameter) ->
+      selected_algorithm_index = $('#algorithm_select')[0].selectedIndex
+      new mu_over_rho_comma_lambda parameter if selected_algorithm_index == 2
+      new particle_swarm_optimization parameter if selected_algorithm_index == 1
+      new differential_evolution parameter
+
+    write = (data) ->
+      $('#output').append data
+    best_particles = new Array()
+    number_of_runs = parseInt($('#number_of_runs').val())
+    current_run = 1
+    start_run = () ->
+      current_run++ < number_of_runs
+    run = () ->
+      parameter = algorithm_parameter
+      parameter.termination_logic = (best_particle) ->
+        best_particles.push best_particle
+        write '.'
+        if start_run()
+          window.setTimeout(run,1)
+        else
+          terminate()
+      algorithm = create_algorithm parameter
+      algorithm.run()
+    output_results = () ->
+      results = $('#results')
+      for particle in best_particles
+        row = $('<tr>')
+        col1 = $('<td>')
+        col1.append particle.objective_value
+        row.append col1
+        col2 = $('<td>')
+        col2.append particle.parameter_value_to_string()
+        row.append col2
+        results.append row
+    output_average_objective_value = () ->
+      objective_sum = 0
+      for particle in best_particles
+        objective_sum += particle.objective_value
+      objective_average = objective_sum / best_particles.length
+      $('#average_objective_value').html objective_average
+    output_average_parameter_value = () ->
+      parameter_value_sum = []
+      for j in [0...best_particles[0].parameter_value.length]
+        parameter_value_sum.push 0
+      for i in [0...best_particles.length]
+        particle = best_particles[i]
+        for j in [0...particle.parameter_value.length]
+          dimension_value = particle.parameter_value[j]
+          parameter_value_sum[j] += dimension_value
+      parameter_value_average = []
+      $('#average_parameter_value').html ''
+      for j in [0...parameter_value_sum.length]
+        dimension_sum = parameter_value_sum[j]
+        dimension_average = dimension_sum / best_particles.length
+        $('#average_parameter_value').append(dimension_average+' | ')
+        dimension_average
+
+    output_variance_parameter_value = (average) ->
+      sum_of_squared_differences = []
+      for j in [0...best_particles[0].parameter_value.length]
+        sum_of_squared_differences.push 0
+      for i in [0...best_particles.length]
+        particle = best_particles[i]
+        for j in [0...particle.parameter_value.length]
+          dimension_value = particle.parameter_value[j]
+          dimension_difference = dimension_value - average[j]
+          sum_of_squared_differences[j] += dimension_difference*dimension_difference
+      $('#variance_parameter_value').html ''
+      for j in [0...sum_of_squared_differences.length]
+        dimension_difference_sum = sum_of_squared_differences[j]
+        dimension_variance = dimension_difference_sum / (best_particles.length-1)
+        $('#variance_parameter_value').append(dimension_variance+' | ')
+
+
+    output_statistic = () ->
+      output_average_objective_value()
+      average = output_average_parameter_value()
+      output_variance_parameter_value average
+
+    terminate = () ->
+      output_results()
+      output_statistic()
+    run()
+    false
+  )
+)

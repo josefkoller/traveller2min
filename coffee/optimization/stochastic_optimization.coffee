@@ -57,3 +57,4 @@ class stochastic_optimization
     best = @particles.current_best_particle
     text = "FINISHED!<br/>Best particle at termination:<br/>" + best.to_string()
     $("#termination_display").html text
+    @parameter.termination_logic best if @parameter.termination_logic

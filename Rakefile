@@ -1,6 +1,7 @@
 desc "concats the coffee subscripts"
 task :mix_coffee do
-  sh "coffeescript-concat -I coffee -o mixed_coffee/traveller2min.coffee"
+  sh "coffeescript-concat -I coffee/optimization -I coffee/graphicmode -o mixed_coffee/traveller2min.coffee"
+  sh "coffeescript-concat -I coffee/optimization -I coffee/fastmode -o mixed_coffee/fastmode/traveller2min_fastmode.coffee"
 end
 
 desc 'downloads and installs c3dl'

@@ -20,7 +20,7 @@ class ParticleStorage
 
   check_best_particle: (new_particle) ->
     return  if @current_best_particle? and @current_best_particle.objective_value < new_particle.objective_value
-    @parameter.on_best_particle_changes(new_particle) 
+    @parameter.on_best_particle_changes(new_particle) if @parameter.on_best_particle_changes
     @current_best_particle = new_particle
 
   check_parameter_value_in_search_space: (parameter_value) ->
@@ -32,7 +32,7 @@ class ParticleStorage
   add: (parameter_value, objective_value) ->
     particle = @construct_particle parameter_value, objective_value
     @particles.push particle
-    @parameter.on_particle_creation particle
+    @parameter.on_particle_creation particle if @parameter.on_particle_creation
     @check_best_particle particle
 
   add_random_particle: ->
@@ -48,15 +48,15 @@ class ParticleStorage
 Particle::dominates = (other) ->
   @objective_value < other.objective_value
 
-
 Particle::to_string = ->
-  display_float = (float) ->
-     if float < 0.0000001
-       0
-     float
-  parameter_value = "("
-  for dimension_value in @parameter_value
-     parameter_value += display_float(dimension_value) + ", "
-  parameter_value += ")"
-  objective_value = display_float @objective_value
+  parameter_value = @parameter_value_to_string()
+  objective_value = @objective_value
   "parameter value: " + parameter_value + "<br/>objective value: " + objective_value
+
+Particle::parameter_value_to_string = ->
+  parameter_value = "("
+  for i in [0...@parameter_value.length-1]
+    dimension_value = @parameter_value[i]
+    parameter_value += dimension_value + ", "
+  parameter_value += @parameter_value[@parameter_value.length-1] + ")"
+

@@ -7,9 +7,12 @@
 #= require <performance_functions>
 
 algorithm_parameter = parameter7 #7, 10... more than 1 min
-algorithm_parameter.number_of_iterations = 300
+algorithm_parameter.number_of_iterations = 100
+algorithm_parameter.number_of_particles = algorithm_parameter.number_of_dimensions * 20
 create_algorithm = (parameter) ->
-  new mu_over_rho_comma_lambda parameter
+  #new mu_over_rho_comma_lambda parameter
+  #new paricle_swarm_optimization parameter
+  new differential_evolution parameter
 
 
 # GRAPHICAL USER INTERFACE, using c3dl-js-library, 3D graphical output and keyboard, mouse input
@@ -190,7 +193,7 @@ create_algorithm = (parameter) ->
       ymax = search_space2.max
       xh = xmax - xmin
       yh = ymax - ymin
-      s = 20
+      s = 30
       xs = (xmax-xmin)/s
       ys = 1
       if ymax > ymin

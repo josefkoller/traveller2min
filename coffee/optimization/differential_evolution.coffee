@@ -45,10 +45,10 @@ class differential_evolution
     for particle in particles.particles
       if particle.cross_over and particle.child.dominates(particle)
         child_wins++
-        @parameter.on_particle_death(particle, @algorithm.iteration_progress)
+        @parameter.on_particle_death particle, @algorithm.iteration_progress if @parameter.on_particle_death
         particle.parameter_value = particle.child.parameter_value
         particle.objective_value = particle.child.objective_value
-        @parameter.on_particle_creation(particle)
+        @parameter.on_particle_creation(particle) if @parameter.on_particle_creation
         particles.check_best_particle(particle)
     if DISPLAY_ITERATION_INFO
       $('#iteration_display').append "<br/>#{child_wins}/#{particles.particles.length} wins"

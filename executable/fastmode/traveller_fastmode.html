@@ -1,0 +1,83 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+	<title>Traveller fastmode</title>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+  <script type="application/javascript" src="traveller2min_fastmode.js"></script>
+  <link rel="stylesheet" type="text/css" href="traveller_fastmode.css" />
+</head>
+<body>
+
+  <div>
+    <div class='input_field'>
+      <label>Algorithm</label>
+      <select id='algorithm_select'>
+        <option>Differential Evolution</option>
+        <option>Particle Swarm Optimization</option>
+        <option>(1+1)-strategy</option>
+      </select>
+    </div>
+
+    <div class='input_field'>
+      <label>Objective Function</label>
+      <select id='objective_select'>
+        <option>Beales function</option>
+        <option>Rosenbrock function</option>
+        <option>Goldstein-Price function</option>
+        <option>Bukin function number 6</option>
+        <option>Ackleys function</option>
+        <option>Matyas function</option>
+        <option>Hoelder table</option>
+        <option>Schaffer function number 3</option>
+        <option>Styblinski-Tang function</option>
+        <option>Six hump camel back</option>
+        <option>Drop wave</option>
+        <option>Random Shekel's Foxholes</option>
+      </select>
+    </div>
+
+    <div class='input_field'>
+      <label>Number of generations</label>
+      <input type='text' value='100' id='number_of_iterations'/>
+    </div>
+
+    <div class='input_field'>
+      <label>Number of particles/generation</label>
+      <input type='text' value='64' id='number_of_particles'/>
+    </div>
+
+    <div class='input_field'>
+      <label>Number of runs</label>
+      <input type='text' value='30' id='number_of_runs'/>
+    </div>
+
+    <input type='button' value='run' id='run_button' />
+  </div>
+
+  <div id='output'>
+
+  </div>
+  <table id='results'>
+    <tr>
+      <td>objective value</td>
+      <td>parameter value</td>
+    </tr>
+  </table>
+  <input type='button' value='clear table' id='clear_button' />
+    <div class='input_field'>
+      <label>Average Objective Value:</label>
+      <span id='average_objective_value'>?</span>
+    </div>
+    <div class='input_field'>
+      <label>Average Parameter Value:</label>
+      <span id='average_parameter_value'>?</span>
+    </div>
+    <div class='input_field'>
+      <label>Variance in Parameter Value:</label>
+      <span id='variance_parameter_value'>?</span>
+    </div>
+
+</body>
+</html>

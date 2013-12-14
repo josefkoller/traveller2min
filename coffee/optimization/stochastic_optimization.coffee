@@ -14,7 +14,7 @@ class stochastic_optimization
     @parameter.number_of_dimensions = parameter.number_of_dimensions or 1
     @parameter.number_of_particles = parameter.number_of_particles or 100
     @parameter.number_of_iterations = parameter.number_of_iterations or 10
-
+    @parameter.fast_mode = parameter.fast_mode or false
   run:  =>
     $('#termination_display').html "running..."
     @initialize()
@@ -28,7 +28,10 @@ class stochastic_optimization
     @selection()
     that = this
     if(@start_iteration())
-      window.setTimeout((() -> that.iteration()), ITERATION_SLEEP)
+      if @parameter.fast_mode
+        this.iteration()
+      else
+        window.setTimeout((() -> that.iteration()), ITERATION_SLEEP)
     else
       @termination()
 

@@ -10,6 +10,7 @@
 </head>
 <body>
 
+  <div class='header'>Input</div>
   <div>
     <div class='input_field'>
       <label>Algorithm</label>
@@ -56,16 +57,9 @@
     <input type='button' value='run' id='run_button' />
   </div>
 
-  <div id='output'>
-
-  </div>
-  <table id='results'>
-    <tr>
-      <td>objective value</td>
-      <td>parameter value</td>
-    </tr>
-  </table>
-  <input type='button' value='clear table' id='clear_button' />
+  <div class='header'>Output</div>
+  <div id='progress'></div>
+  <div id='output'></div>
     <div class='input_field'>
       <label>Average Objective Value:</label>
       <span id='average_objective_value'>?</span>
@@ -78,6 +72,8 @@
       <label>Variance in Parameter Value:</label>
       <span id='variance_parameter_value'>?</span>
     </div>
-
+  <table id='results'>
+  </table>
+  <input type='button' value='clear table' id='clear_button' />
 </body>
 </html>

@@ -51,12 +51,15 @@ Particle::dominates = (other) ->
 Particle::to_string = ->
   parameter_value = @parameter_value_to_string()
   objective_value = @objective_value
-  "parameter value: " + parameter_value + "<br/>objective value: " + objective_value
+  'parameter value: ' + parameter_value + '<br/>objective value: ' + objective_value
 
 Particle::parameter_value_to_string = ->
-  parameter_value = "("
-  for i in [0...@parameter_value.length-1]
-    dimension_value = @parameter_value[i]
-    parameter_value += dimension_value + ", "
-  parameter_value += @parameter_value[@parameter_value.length-1] + ")"
+  format_vector @parameter_value
+
+format_vector = (vector) ->
+  text = '('
+  for i in [0...vector.length-1]
+    dimension_value = vector[i]
+    text += dimension_value + '|'
+  text += vector[vector.length-1] + ')'
 

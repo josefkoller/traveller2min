@@ -21,7 +21,7 @@ class stochastic_optimization
     @iteration()
 
   iteration: () ->
-    if DISPLAY_ITERATION_INFO
+    if DISPLAY_ITERATION_INFO and not @parameter.fast_mode
       $('#iteration_display').html "<br/>iteration: #{@current_iteration}/#{@parameter.number_of_iterations}"
     @mutation()
     @recombination()
@@ -58,6 +58,7 @@ class stochastic_optimization
 
   termination: =>
     best = @particles.current_best_particle
-    text = "FINISHED!<br/>Best particle at termination:<br/>" + best.to_string()
-    $("#termination_display").html text
+    unless @parameter.fast_mode
+      text = "FINISHED!<br/>Best particle at termination:<br/>" + best.to_string()
+      $("#termination_display").html text
     @parameter.termination_logic best if @parameter.termination_logic

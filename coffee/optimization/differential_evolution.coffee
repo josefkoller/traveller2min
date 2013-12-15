@@ -50,7 +50,7 @@ class differential_evolution
         particle.objective_value = particle.child.objective_value
         @parameter.on_particle_creation(particle) if @parameter.on_particle_creation
         particles.check_best_particle(particle)
-    if DISPLAY_ITERATION_INFO
+    if DISPLAY_ITERATION_INFO and not @parameter.fast_mode
       $('#iteration_display').append "<br/>#{child_wins}/#{particles.particles.length} wins"
 
   run: =>

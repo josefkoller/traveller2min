@@ -6,7 +6,6 @@
 #= require <../mu_over_rho_comma_lambda>
 #= require <../performance_functions>
 
-
 $(document).ready( ->
   clear_table = ->
     $('#results tr').remove()
@@ -34,6 +33,10 @@ $(document).ready( ->
     current_run = 1
     start_run = () ->
       current_run++ < number_of_runs
+
+    time = () ->
+      (new Date()).getTime()
+    start_time = time()
     run = () ->
       parameter = algorithm_parameter
       parameter.termination_logic = (best_particle) ->
@@ -42,8 +45,10 @@ $(document).ready( ->
         $('#progress').html progress
         write '.'
         if start_run()
-          if (current_run+1) % 100 == 0
+          duration = time() - start_time
+          if duration > 500
             window.setTimeout run,1
+            start_time = time()
           else
             run()
         else
@@ -117,15 +122,14 @@ $(document).ready( ->
 
 
     output_statistic = () ->
-      $('#output').html 'calculating statistics...'
       output_average_objective_value()
       average = output_average_parameter_value()
       output_variance_parameter_value average
-      $('#output').html ''
 
     terminate = () ->
       output_results()
       output_statistic()
+      $('#output').html ''
     run()
     false
   )
